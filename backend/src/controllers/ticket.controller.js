@@ -234,3 +234,43 @@ export const deleteTicket = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// -------------------------------------------------------
+// 11. Получить один тикет (универсальный)
+// -------------------------------------------------------
+export const getTicketById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role, userId } = req.user;
+
+    const ticket = await Ticket.findById(id);
+
+    if (!ticket) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+
+    // 🔐 USER → только свой тикет
+    if (role === "user" && ticket.userId.toString() !== userId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    // 🔐 SPECIALIST → только своя категория
+    const roleToCategory = {
+      it_support: "software",
+      network_admin: "network",
+      sysadmin: "infrastructure",
+      security: "security",
+      hardware_support: "hardware",
+    };
+
+    if (roleToCategory[role] && ticket.category !== roleToCategory[role]) {
+      return res.status(403).json({ message: "Wrong category" });
+    }
+
+    // operator/admin → доступ ко всему
+
+    res.json(ticket);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

@@ -1,16 +1,15 @@
 // routes/ticket.routes.js
 import express from "express";
 import {
-    addComment,
-    assignTicket,
-    closeTicket,
-    createTicket,
-    deleteTicket,
-    getAllTickets,
-    getMyTickets,
-    getTicketsByCategory,
-    mlCorrection,
-    updateStatus,
+  addComment,
+  assignTicket,
+  closeTicket,
+  createTicket,
+  deleteTicket,
+  getAllTickets,
+  getMyTickets, getTicketById, getTicketsByCategory,
+  mlCorrection,
+  updateStatus
 } from "../controllers/ticket.controller.js";
 
 import { authenticate, authorizeRoles } from "../middleware/authMiddleware.js";
@@ -99,6 +98,7 @@ router.patch("/:id/close", authenticate, authorizeRoles(
 // Удаление тикета (только admin)
 // -------------------------------------------------------
 router.delete("/:id", authenticate, authorizeRoles("admin"), deleteTicket);
+router.get("/:id", authenticate, getTicketById);
 
 export default router;
 
