@@ -19,9 +19,30 @@ export default function Login() {
         password,
       });
 
-      localStorage.setItem("token", res.data.token);
+          const { token, role } = res.data;
 
-      navigate("/dashboard");
+    localStorage.setItem("token", token);
+    localStorage.setItem("role", role);
+    console.log("ROLE FROM BACK:", role);
+
+    const userRole = role?.toLowerCase().trim();
+
+if (userRole === "operator") {
+  navigate("/operator");
+} else if (userRole === "admin") {
+  navigate("/admin");
+} else if (
+  userRole === "it_support" ||
+  userRole === "network_admin" ||
+  userRole === "sysadmin" ||
+  userRole === "security" ||
+  userRole === "hardware_support"
+) {
+  navigate("/specialist");
+}
+else {
+  navigate("/dashboard");
+}
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     }
