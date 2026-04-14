@@ -1,5 +1,5 @@
-// routes/ticket.routes.js
 import express from "express";
+
 import {
   addComment,
   assignTicket,
@@ -7,7 +7,9 @@ import {
   createTicket,
   deleteTicket,
   getAllTickets,
-  getMyTickets, getTicketById, getTicketsByCategory,
+  getMyTickets,
+  getTicketById,
+  getTicketsByCategory,
   mlCorrection,
   updateStatus
 } from "../controllers/ticket.controller.js";
@@ -16,61 +18,11 @@ import { authenticate, authorizeRoles } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// -------------------------------------------------------
-// Создать тикет (только user)
-// -------------------------------------------------------
-router.post("/", authenticate, authorizeRoles("user"), createTicket);
 
-// -------------------------------------------------------
-// Мои тикеты (только user)
-// -------------------------------------------------------
-router.get("/my", authenticate, authorizeRoles("user"), getMyTickets);
-
-// -------------------------------------------------------
-// Все тикеты (operator / admin)
-// -------------------------------------------------------
-router.get("/", authenticate, authorizeRoles("operator", "admin"), getAllTickets);
-
-// -------------------------------------------------------
-// Тикеты по категории (специалисты)
-// -------------------------------------------------------
-router.get("/category/:category", authenticate, authorizeRoles(
-  "it_support",
-  "network_admin",
-  "sysadmin",
-  "security",
-  "hardware_support",
-  "operator",
-  "admin"
-), getTicketsByCategory);
-
-// -------------------------------------------------------
-// Обновление статуса тикета
-// -------------------------------------------------------
-router.patch("/:id/status", authenticate, authorizeRoles(
-  "operator",
-  "admin",
-  "it_support",
-  "network_admin",
-  "sysadmin",
-  "security",
-  "hardware_support"
-), updateStatus);
-
-// -------------------------------------------------------
-// ML корректировка (operator / admin)
-// -------------------------------------------------------
-router.patch("/:id/ml-correction", authenticate, authorizeRoles("operator", "admin"), mlCorrection);
-
-// -------------------------------------------------------
-// Назначение тикета (operator / admin)
-// -------------------------------------------------------
-router.patch("/:id/assign", authenticate, authorizeRoles("operator", "admin"), assignTicket);
-
-// -------------------------------------------------------
-// Добавление комментария
-// -------------------------------------------------------
-router.post("/:id/comment", authenticate, authorizeRoles(
+// =======================================================
+// ROLES (единый список для чистоты)
+// =======================================================
+const allRoles = [
   "user",
   "operator",
   "admin",
@@ -78,27 +30,152 @@ router.post("/:id/comment", authenticate, authorizeRoles(
   "network_admin",
   "sysadmin",
   "security",
-  "hardware_support"
-), addComment);
+  "hardware_support",
+];
 
-// -------------------------------------------------------
-// Закрытие тикета
-// -------------------------------------------------------
-router.patch("/:id/close", authenticate, authorizeRoles(
-  "operator",
-  "admin",
-  "it_support",
-  "network_admin",
-  "sysadmin",
-  "security",
-  "hardware_support"
-), closeTicket);
 
-// -------------------------------------------------------
-// Удаление тикета (только admin)
-// -------------------------------------------------------
-router.delete("/:id", authenticate, authorizeRoles("admin"), deleteTicket);
-router.get("/:id", authenticate, getTicketById);
+// =======================================================
+// CREATE TICKET
+// =======================================================
+router.post(
+  "/",
+  authenticate,
+  authorizeRoles("user"),
+  createTicket
+);
+
+
+// =======================================================
+// MY TICKETS (user)
+// =======================================================
+router.get(
+  "/my",
+  authenticate,
+  authorizeRoles("user"),
+  getMyTickets
+);
+
+
+// =======================================================
+// CATEGORY TICKETS (specialists)
+// =======================================================
+router.get(
+  "/category/:category",
+  authenticate,
+  authorizeRoles(
+    "it_support",
+    "network_admin",
+    "sysadmin",
+    "security",
+    "hardware_support",
+    "operator",
+    "admin"
+  ),
+  getTicketsByCategory
+);
+
+
+// =======================================================
+// ALL TICKETS (operator / admin)
+// =======================================================
+router.get(
+  "/",
+  authenticate,
+  authorizeRoles("operator", "admin"),
+  getAllTickets
+);
+
+
+// =======================================================
+// GET TICKET BY ID (universal, internal checks in controller)
+// =======================================================
+router.get(
+  "/:id",
+  authenticate,
+  getTicketById
+);
+
+
+// =======================================================
+// UPDATE STATUS
+// =======================================================
+router.patch(
+  "/:id/status",
+  authenticate,
+  authorizeRoles(
+    "operator",
+    "admin",
+    "it_support",
+    "network_admin",
+    "sysadmin",
+    "security",
+    "hardware_support"
+  ),
+  updateStatus
+);
+
+
+// =======================================================
+// ML CORRECTION (feedback loop)
+// =======================================================
+router.patch(
+  "/:id/ml-correction",
+  authenticate,
+  authorizeRoles("operator", "admin"),
+  mlCorrection
+);
+
+
+// =======================================================
+// ASSIGN TICKET
+// =======================================================
+router.patch(
+  "/:id/assign",
+  authenticate,
+  authorizeRoles("operator", "admin"),
+  assignTicket
+);
+
+
+// =======================================================
+// ADD COMMENT
+// =======================================================
+router.post(
+  "/:id/comment",
+  authenticate,
+  authorizeRoles(...allRoles),
+  addComment
+);
+
+
+// =======================================================
+// CLOSE TICKET
+// =======================================================
+router.patch(
+  "/:id/close",
+  authenticate,
+  authorizeRoles(
+    "operator",
+    "admin",
+    "it_support",
+    "network_admin",
+    "sysadmin",
+    "security",
+    "hardware_support"
+  ),
+  closeTicket
+);
+
+
+// =======================================================
+// DELETE TICKET (admin only)
+// =======================================================
+router.delete(
+  "/:id",
+  authenticate,
+  authorizeRoles("admin"),
+  deleteTicket
+);
 
 export default router;
 

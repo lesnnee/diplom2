@@ -32,18 +32,11 @@ const TicketSchema = new mongoose.Schema(
 
     priority: { type: Number, min: 1, max: 5, default: 3 },
 
+    // 🔥 ВОТ ГЛАВНОЕ ИЗМЕНЕНИЕ
     assignedTo: {
-      type: String,
-      enum: [
-        "operator",
-        "admin",
-        "it_support",
-        "network_admin",
-        "sysadmin",
-        "security",
-        "hardware_support",
-      ],
-      default: "operator",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
     },
 
     comments: [
@@ -64,7 +57,7 @@ const TicketSchema = new mongoose.Schema(
 
     history: [
       {
-        action: String, // status_change, category_change, assigned, comment_added...
+        action: String,
         oldValue: String,
         newValue: String,
         changedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

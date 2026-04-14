@@ -1,28 +1,43 @@
-// controllers/ticket.controller.js
+import axios from "axios";
 import Ticket from "../models/Ticket.js";
+import { findBestSpecialist } from "../utils/smartRouting.js";
 
-// Заглушка ML-классификатора
-async function mockMLClassifier(description) {
-  // Имитация "умной" обработки
-  if (description.toLowerCase().includes("wifi")) return { category: "network", priority: 2 };
-  if (description.toLowerCase().includes("virus")) return { category: "security", priority: 1 };
-  if (description.toLowerCase().includes("printer")) return { category: "hardware", priority: 3 };
 
-  return { category: "unknown", priority: 3 };
+// =======================================================
+// ML SERVICE CALL
+// =======================================================
+async function mlClassifier(description) {
+  try {
+    const res = await axios.post("http://localhost:8000/predict", {
+      description,
+    });
+
+    return res.data;
+  } catch (err) {
+    console.error("ML error:", err.message);
+
+    // fallback
+    return {
+      category: "unknown",
+      priority: 3,
+      confidence: 0
+    };
+  }
 }
 
-// -------------------------------------------------------
-// 1. Создать тикет (только user)
-// -------------------------------------------------------
+
+// =======================================================
+// 1. CREATE TICKET
+// =======================================================
 export const createTicket = async (req, res) => {
   try {
     const { title, description } = req.body;
-    const userId = req.user.userId; 
 
-    // ML обработка
-    const ml = await mockMLClassifier(description);
+    const userId = req.user.userId;
 
-    // Определение исполнителя по категории
+    // AI classification
+    const ml = await mlClassifier(description);
+
     const categoryToRole = {
       software: "it_support",
       network: "network_admin",
@@ -32,7 +47,11 @@ export const createTicket = async (req, res) => {
       unknown: "operator",
     };
 
-    const assignedTo = categoryToRole[ml.category] || "operator";
+    const specialistRole = categoryToRole[ml.category] || "operator";
+
+const specialist = await findBestSpecialist(specialistRole);
+
+const assignedTo = specialist?._id || "operator";
 
     const ticket = await Ticket.create({
       userId,
@@ -43,29 +62,38 @@ export const createTicket = async (req, res) => {
       assignedTo,
     });
 
-    res.status(201).json({ message: "Ticket created", ticket });
+    res.status(201).json({
+      message: "Ticket created",
+      ticket,
+    });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// -------------------------------------------------------
-// 2. Мои тикеты (user)
-// -------------------------------------------------------
+
+// =======================================================
+// 2. USER TICKETS
+// =======================================================
 export const getMyTickets = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const tickets = await Ticket.find({ userId }).sort({ createdAt: -1 });
+
+    const tickets = await Ticket.find({ userId })
+      .sort({ createdAt: -1 });
 
     res.json(tickets);
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// -------------------------------------------------------
-// 3. Все тикеты (operator / admin)
-// -------------------------------------------------------
+
+// =======================================================
+// 3. ALL TICKETS (operator/admin)
+// =======================================================
 export const getAllTickets = async (req, res) => {
   try {
     const filters = {};
@@ -77,24 +105,25 @@ export const getAllTickets = async (req, res) => {
     if (req.query.assignedTo) filters.assignedTo = req.query.assignedTo;
 
     const tickets = await Ticket.find(filters)
-      .populate("userId")
+      .populate("userId", "name email")
       .sort({ createdAt: -1 });
 
     res.json(tickets);
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// -------------------------------------------------------
-// 4. Тикеты по категории для специалиста
-// -------------------------------------------------------
+
+// =======================================================
+// 4. CATEGORY TICKETS (specialist)
+// =======================================================
 export const getTicketsByCategory = async (req, res) => {
   try {
-    const role = req.user.role; // роль исполнителя
+    const role = req.user.role;
     const category = req.params.category;
 
-    // Проверка: пользователь запрашивает свою категорию?
     const roleToCategory = {
       it_support: "software",
       network_admin: "network",
@@ -103,27 +132,42 @@ export const getTicketsByCategory = async (req, res) => {
       hardware_support: "hardware",
     };
 
-    if (roleToCategory[role] !== category) {
-      return res.status(403).json({ error: "Access denied: wrong category" });
+    if (roleToCategory[role] && roleToCategory[role] !== category) {
+      return res.status(403).json({
+        error: "Access denied: wrong category",
+      });
     }
 
-    const tickets = await Ticket.find({ category }).sort({ createdAt: -1 });
+    const tickets = await Ticket.find({ category })
+      .sort({ createdAt: -1 });
+
     res.json(tickets);
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// -------------------------------------------------------
-// 5. Обновить статус тикета
-// -------------------------------------------------------
+
+// =======================================================
+// 5. UPDATE STATUS
+// =======================================================
 export const updateStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
     const role = req.user.role;
 
-    const allowedRoles = ["operator", "admin", "it_support", "sysadmin", "network_admin", "security", "hardware_support"];
+    const allowedRoles = [
+      "operator",
+      "admin",
+      "it_support",
+      "network_admin",
+      "sysadmin",
+      "security",
+      "hardware_support",
+    ];
+
     if (!allowedRoles.includes(role)) {
       return res.status(403).json({ error: "Access denied" });
     }
@@ -135,14 +179,16 @@ export const updateStatus = async (req, res) => {
     );
 
     res.json(ticket);
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// -------------------------------------------------------
-// 6. Корректировка ML (operator / admin)
-// -------------------------------------------------------
+
+// =======================================================
+// 6. ML CORRECTION (feedback)
+// =======================================================
 export const mlCorrection = async (req, res) => {
   try {
     const { id } = req.params;
@@ -154,15 +200,26 @@ export const mlCorrection = async (req, res) => {
       { new: true }
     );
 
-    res.json({ message: "ML corrected", ticket });
+    await axios.post("http://localhost:8000/feedback", {
+  description: ticket.description,
+  category,
+  priority
+});
+
+    res.json({
+      message: "ML corrected",
+      ticket,
+    });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// -------------------------------------------------------
-// 7. Назначить тикет вручную
-// -------------------------------------------------------
+
+// =======================================================
+// 7. ASSIGN TICKET
+// =======================================================
 export const assignTicket = async (req, res) => {
   try {
     const { id } = req.params;
@@ -174,39 +231,52 @@ export const assignTicket = async (req, res) => {
       { new: true }
     );
 
-    res.json({ message: "Ticket assigned", ticket });
+    res.json({
+      message: "Ticket assigned",
+      ticket,
+    });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// -------------------------------------------------------
-// 8. Добавить комментарий
-// -------------------------------------------------------
+
+// =======================================================
+// 8. ADD COMMENT
+// =======================================================
 export const addComment = async (req, res) => {
   try {
     const { id } = req.params;
     const { message } = req.body;
 
     const ticket = await Ticket.findById(id);
-    if (!ticket) return res.status(404).json({ error: "Ticket not found" });
+
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
 
     ticket.comments.push({
-      userId: req.user.id,
+      userId: req.user.userId,
       message,
     });
 
     await ticket.save();
 
-    res.json({ message: "Comment added", ticket });
+    res.json({
+      message: "Comment added",
+      ticket,
+    });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// -------------------------------------------------------
-// 9. Закрыть тикет
-// -------------------------------------------------------
+
+// =======================================================
+// 9. CLOSE TICKET
+// =======================================================
 export const closeTicket = async (req, res) => {
   try {
     const { id } = req.params;
@@ -218,43 +288,48 @@ export const closeTicket = async (req, res) => {
     );
 
     res.json(ticket);
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// -------------------------------------------------------
-// 10. Удалить тикет (admin)
-// -------------------------------------------------------
+
+// =======================================================
+// 10. DELETE TICKET (admin)
+// =======================================================
 export const deleteTicket = async (req, res) => {
   try {
     await Ticket.findByIdAndDelete(req.params.id);
+
     res.json({ message: "Ticket deleted" });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// -------------------------------------------------------
-// 11. Получить один тикет (универсальный)
-// -------------------------------------------------------
+
+// =======================================================
+// 11. GET TICKET BY ID (secure)
+// =======================================================
 export const getTicketById = async (req, res) => {
   try {
     const { id } = req.params;
     const { role, userId } = req.user;
 
-    const ticket = await Ticket.findById(id);
+    const ticket = await Ticket.findById(id).populate("userId", "name email");
 
     if (!ticket) {
       return res.status(404).json({ message: "Ticket not found" });
     }
 
-    // 🔐 USER → только свой тикет
-    if (role === "user" && ticket.userId.toString() !== userId) {
+    // USER → only own ticket
+    if (role === "user" && ticket.userId._id.toString() !== userId) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    // 🔐 SPECIALIST → только своя категория
+    // SPECIALIST → only category access
     const roleToCategory = {
       it_support: "software",
       network_admin: "network",
@@ -263,13 +338,15 @@ export const getTicketById = async (req, res) => {
       hardware_support: "hardware",
     };
 
-    if (roleToCategory[role] && ticket.category !== roleToCategory[role]) {
+    if (
+      roleToCategory[role] &&
+      ticket.category !== roleToCategory[role]
+    ) {
       return res.status(403).json({ message: "Wrong category" });
     }
 
-    // operator/admin → доступ ко всему
-
     res.json(ticket);
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
