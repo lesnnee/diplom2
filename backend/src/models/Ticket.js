@@ -8,7 +8,8 @@ const TicketSchema = new mongoose.Schema(
       required: true,
     },
 
-    title: { type: String, required: true },
+    // ❌ убрали title
+
     description: { type: String, required: true },
 
     status: {
@@ -32,7 +33,6 @@ const TicketSchema = new mongoose.Schema(
 
     priority: { type: Number, min: 1, max: 5, default: 3 },
 
-    // 🔥 ВОТ ГЛАВНОЕ ИЗМЕНЕНИЕ
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -8,14 +8,14 @@ export default function TicketDetails() {
   const [ticket, setTicket] = useState(null);
   const [message, setMessage] = useState("");
 
- const loadTicket = async () => {
-  try {
-    const res = await api.get(`/tickets/${id}`);
-    setTicket(res.data);
-  } catch (err) {
-    console.error(err);
-  }
-};
+  const loadTicket = async () => {
+    try {
+      const res = await api.get(`/tickets/${id}`);
+      setTicket(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     loadTicket();
@@ -30,23 +30,82 @@ export default function TicketDetails() {
   if (!ticket) return <div className="page">Loading...</div>;
 
   return (
-    <div className="ticket-page">
+    <div className="ticket-layout">
 
-      <div className="ticket-header glass">
-        <h1>{ticket.title}</h1>
-        <p>{ticket.description}</p>
+      {/* =========================
+          LEFT SIDE - INFO
+      ========================= */}
+      <div className="ticket-left glass">
 
-        <div className="meta">
-          <span className="badge">{ticket.status}</span>
-          <span className="badge soft">{ticket.category}</span>
+        <h1 className="ticket-title">{ticket.title}</h1>
+
+        <p className="ticket-description">
+          {ticket.description}
+        </p>
+
+        <div className="ticket-meta">
+
+          <div>
+            <span className="label">Status:</span>
+            <span className={`badge ${ticket.status}`}>
+              {ticket.status}
+            </span>
+          </div>
+
+          <div>
+            <span className="label">Category:</span>
+            <span className="badge soft">
+              {ticket.category}
+            </span>
+          </div>
+
+          <div>
+            <span className="label">Priority:</span>
+            <span className="badge">
+              {ticket.priority}
+            </span>
+          </div>
+
+          <div>
+            <span className="label">Assigned:</span>
+            <span className="badge soft">
+              {ticket.assignedTo || "unassigned"}
+            </span>
+          </div>
+
         </div>
+
+        {/* FILES */}
+        {ticket.attachments?.length > 0 && (
+          <div className="attachments">
+            <h3>Files</h3>
+
+            <div className="attachments-grid">
+              {ticket.attachments.map((f, i) => (
+                <a
+                  key={i}
+                  href={f.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="file-card"
+                >
+                  📎 {f.filename}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
 
-      <div className="ticket-body">
+      {/* =========================
+          RIGHT SIDE - COMMENTS
+      ========================= */}
+      <div className="ticket-right glass">
 
-        <div className="comments glass">
-          <h3>Comments</h3>
+        <h3>Comments</h3>
 
+        <div className="comments-list">
           {ticket.comments?.length === 0 && (
             <p className="muted">No comments yet</p>
           )}
@@ -58,7 +117,7 @@ export default function TicketDetails() {
           ))}
         </div>
 
-        <div className="comment-box glass">
+        <div className="comment-box">
           <input
             value={message}
             onChange={(e) => setMessage(e.target.value)}

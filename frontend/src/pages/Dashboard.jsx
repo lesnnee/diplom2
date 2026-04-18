@@ -4,30 +4,30 @@ import api from "../api/axios";
 
 export default function Dashboard() {
   const [tickets, setTickets] = useState([]);
-  const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [user, setUser] = useState(null);
+  const [activeTab, setActiveTab] = useState("active");
+  const [search, setSearch] = useState("");
+  const [files, setFiles] = useState([]);
+  const [sortOrder, setSortOrder] = useState("new"); 
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const navigate = useNavigate();
 
-  // защита
+  // auth check
   useEffect(() => {
     if (!localStorage.getItem("token")) {
       navigate("/");
     }
   }, []);
 
-  // загрузка пользователя (ИЗ БД)
+  // load user
   const loadUser = async () => {
-    try {
-      const res = await api.get("/auth/me"); // 👈 НУЖЕН ЭТОТ ENDPOINT
-      setUser(res.data);
-    } catch (err) {
-      console.log(err);
-    }
+    const res = await api.get("/auth/me");
+    setUser(res.data);
   };
 
-  // тикеты
+  // load tickets
   const loadTickets = async () => {
     const res = await api.get("/tickets/my");
     setTickets(res.data);
@@ -38,25 +38,102 @@ export default function Dashboard() {
     loadTickets();
   }, []);
 
-  // создать тикет
+  // =========================
+  // 📎 FILES FIXED (IMPORTANT)
+  // =========================
+const handleFileChange = (e) => {
+  const selected = Array.from(e.target.files);
+
+  setFiles((prev) => {
+    const remainingSlots = 5 - prev.length;
+
+    if (remainingSlots <= 0) {
+      alert("Можно прикрепить максимум 5 файлов");
+      return prev;
+    }
+
+    const allowed = selected.slice(0, remainingSlots);
+
+    const mapped = allowed.map((file) => ({
+      file,
+      url: file.type.startsWith("image/")
+        ? URL.createObjectURL(file)
+        : null,
+      name: file.name,
+      type: file.type,
+    }));
+
+    return [...prev, ...mapped];
+  });
+
+  e.target.value = null;
+};
+
+  // ❌ remove file
+  const removeFile = (index) => {
+    setFiles((prev) => {
+      const updated = [...prev];
+
+      // cleanup blob url
+      if (updated[index]?.url) {
+        URL.revokeObjectURL(updated[index].url);
+      }
+
+      updated.splice(index, 1);
+      return updated;
+    });
+  };
+
+  // create ticket
   const createTicket = async (e) => {
     e.preventDefault();
 
-    await api.post("/tickets", {
-      title,
-      description,
+    const formData = new FormData();
+    formData.append("description", description);
+
+    files.forEach((f) => {
+      formData.append("files", f.file);
     });
 
-    setTitle("");
+    await api.post("/tickets", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
     setDescription("");
+
+    // cleanup previews
+    files.forEach((f) => {
+      if (f.url) URL.revokeObjectURL(f.url);
+    });
+
+    setFiles([]);
     loadTickets();
   };
 
-  // logout
   const logout = () => {
     localStorage.removeItem("token");
     navigate("/");
   };
+
+const filteredTickets = tickets
+  .filter((t) => {
+    if (activeTab === "active") return t.status !== "done";
+    return t.status === "done";
+  })
+  .filter((t) => {
+    if (statusFilter === "all") return true;
+    return t.status === statusFilter;
+  })
+  .filter((t) =>
+    t.description.toLowerCase().includes(search.toLowerCase())
+  )
+  .sort((a, b) => {
+    if (sortOrder === "new") {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    } else {
+      return new Date(a.createdAt) - new Date(b.createdAt);
+    }
+  });
 
   return (
     <div className="dashboard">
@@ -65,64 +142,147 @@ export default function Dashboard() {
       <div className="panel glass soft">
         <div className="avatar">👤</div>
 
-        <h3 className="name">
-          {user?.name || "Loading..."}
-        </h3>
-
-        <p className="email">
-          {user?.email || ""}
-        </p>
+        <h3 className="name">{user?.name || "Loading..."}</h3>
+        <p className="email">{user?.email}</p>
 
         <span className="logout-text" onClick={logout}>
           logout
         </span>
       </div>
 
-      {/* CREATE TICKET (CENTER BIG) */}
+      {/* CREATE */}
       <div className="panel liquid center">
         <h2 className="title">CREATE TICKET</h2>
 
-        <form onSubmit={createTicket} className="form">
-          <input
-            className="input"
-            placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+        <form onSubmit={createTicket} className="form glass-form">
 
           <textarea
-            className="input"
+            name="description"
+            className="input no-resize"
             placeholder="Describe your problem..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            rows={5}
+            rows={4}
           />
 
-          <button className="button">
-            SEND
-          </button>
+          {/* FILE PREVIEW */}
+          {files.length > 0 && (
+            <div className="file-preview-row">
+              {files.map((f, i) => (
+                <div className="file-preview" key={i}>
+
+                  <div
+                    className="remove-file"
+                    onClick={() => removeFile(i)}
+                  >
+                    ✕
+                  </div>
+
+                  {f.type.startsWith("image/") ? (
+                    <img src={f.url} className="preview-img" />
+                  ) : (
+                    <div className="file-name">
+                      📄 {f.name}
+                    </div>
+                  )}
+
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="form-bottom">
+
+            <label className="clip">
+              📎
+              <input
+                type="file"
+                multiple
+                onChange={handleFileChange}
+                hidden
+              />
+            </label>
+
+            <button className="button liquid-btn">
+              SEND
+            </button>
+
+          </div>
         </form>
       </div>
 
       {/* TICKETS */}
       <div className="panel glass soft-right">
+
         <h2 className="title">TICKETS</h2>
 
-        <div className="tickets">
-         {tickets.map((t) => (
-  <div
-    key={t._id}
-    className="ticket-card"
-    onClick={() => navigate(`/ticket/${t._id}`)}
-    style={{ cursor: "pointer" }}
-  >
-    <div>{t.title}</div>
-    <div>{t.description}</div>
-  </div>
-))}
-        </div>
-      </div>
+        <input
+          className="input search"
+          placeholder="Search tickets..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
 
+        <div className="tabs">
+          <button
+            className={activeTab === "active" ? "tab active" : "tab"}
+            onClick={() => setActiveTab("active")}
+          >
+            Active
+          </button>
+
+          <button
+            className={activeTab === "done" ? "tab active" : "tab"}
+            onClick={() => setActiveTab("done")}
+          >
+            Done
+          </button>
+        </div>
+
+        <div className="filters-row">
+
+  {/* SORT */}
+  <select
+    className="input"
+    value={sortOrder}
+    onChange={(e) => setSortOrder(e.target.value)}
+  >
+    <option value="new">Newest first</option>
+    <option value="old">Oldest first</option>
+  </select>
+
+  {/* STATUS */}
+  <select
+    className="input"
+    value={statusFilter}
+    onChange={(e) => setStatusFilter(e.target.value)}
+  >
+    <option value="all">All statuses</option>
+    <option value="new">New</option>
+    <option value="in_progress">In progress</option>
+    <option value="waiting_user">Waiting user</option>
+    <option value="done">Done</option>
+    <option value="rejected">Rejected</option>
+  </select>
+
+</div>
+
+        <div className="tickets">
+          {filteredTickets.map((t) => (
+            <div
+              key={t._id}
+              className="ticket-card glass-card"
+              onClick={() => navigate(`/ticket/${t._id}`)}
+            >
+              <div>{t.description}</div>
+              <div className={`status ${t.status}`}>
+                {t.status}
+              </div>
+            </div>
+          ))}
+        </div>
+
+      </div>
     </div>
   );
 }

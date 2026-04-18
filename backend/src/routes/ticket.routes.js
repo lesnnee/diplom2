@@ -1,4 +1,5 @@
 import express from "express";
+import upload from "../middleware/upload.js";
 
 import {
   addComment,
@@ -41,9 +42,9 @@ router.post(
   "/",
   authenticate,
   authorizeRoles("user"),
+  upload.array("files", 5), // максимум 5 файлов
   createTicket
 );
-
 
 // =======================================================
 // MY TICKETS (user)

@@ -31,7 +31,7 @@ async function mlClassifier(description) {
 // =======================================================
 export const createTicket = async (req, res) => {
   try {
-    const { title, description } = req.body;
+    const { description } = req.body;
 
     const userId = req.user.userId;
 
@@ -52,15 +52,24 @@ export const createTicket = async (req, res) => {
 const specialist = await findBestSpecialist(specialistRole);
 
 const assignedTo = specialist?._id || "operator";
+// обработка файлов
+let attachments = [];
 
-    const ticket = await Ticket.create({
-      userId,
-      title,
-      description,
-      category: ml.category,
-      priority: ml.priority,
-      assignedTo,
-    });
+if (req.files && req.files.length > 0) {
+  attachments = req.files.map((file) => ({
+    filename: file.originalname,
+    url: `/uploads/${file.filename}`,
+  }));
+}
+
+   const ticket = await Ticket.create({
+  userId,
+  description,
+  category: ml.category,
+  priority: ml.priority,
+  assignedTo,
+  attachments, // 👈 ВАЖНО
+});
 
     res.status(201).json({
       message: "Ticket created",
