@@ -1,29 +1,21 @@
 import multer from "multer";
 import path from "path";
 
-
 const uploadPath = path.resolve("src/uploads");
 
-
-// куда сохранять
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
   },
 
-  filename: (req, file, cb) => {
-    const uniqueName =
-      Date.now() + "-" + Math.round(Math.random() * 1e9);
+filename: (req, file, cb) => {
+  const ext = path.extname(file.originalname);
 
-    cb(null, uniqueName + path.extname(file.originalname));
+  const safeName =
+    Date.now() + "-" + Math.random().toString(36).slice(2, 10) + ext;
+
+  cb(null, safeName);
   },
 });
 
-// фильтр (опционально)
-const fileFilter = (req, file, cb) => {
-  cb(null, true); // можно ограничить типы позже
-};
-
-const upload = multer({ storage, fileFilter });
-
-export default upload;
+export default multer({ storage });

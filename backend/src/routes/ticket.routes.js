@@ -1,11 +1,12 @@
 import express from "express";
+import { createTicket } from "../controllers/ticket.controller.js";
+import { fixMultipartEncoding } from "../middleware/fixMultipartEncoding.js";
 import upload from "../middleware/upload.js";
 
 import {
   addComment,
   assignTicket,
   closeTicket,
-  createTicket,
   deleteTicket,
   getAllTickets,
   getMyTickets,
@@ -43,6 +44,7 @@ router.post(
   authenticate,
   authorizeRoles("user"),
   upload.array("files", 5), // максимум 5 файлов
+  fixMultipartEncoding,
   createTicket
 );
 

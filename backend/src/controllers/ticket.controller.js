@@ -57,8 +57,10 @@ let attachments = [];
 
 if (req.files && req.files.length > 0) {
   attachments = req.files.map((file) => ({
-    filename: file.originalname,
+    filename: file.originalname,   // имя от пользователя (для UI)
+    safeName: file.filename,       // реальное имя на диске
     url: `/uploads/${file.filename}`,
+    mimeType: file.mimetype,
   }));
 }
 
@@ -327,7 +329,9 @@ export const getTicketById = async (req, res) => {
     const { id } = req.params;
     const { role, userId } = req.user;
 
-    const ticket = await Ticket.findById(id).populate("userId", "name email");
+const ticket = await Ticket.findById(id)
+  .populate("userId", "name email")
+  .populate("assignedTo", "name role");
 
     if (!ticket) {
       return res.status(404).json({ message: "Ticket not found" });

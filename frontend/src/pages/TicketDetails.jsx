@@ -27,6 +27,30 @@ export default function TicketDetails() {
     loadTicket();
   };
 
+  const openFile = (file) => {
+  const url = `http://localhost:5000${file.url}`;
+
+  const ext = file.filename.split(".").pop().toLowerCase();
+
+  // картинки
+  if (["jpg", "jpeg", "png", "webp", "gif"].includes(ext)) {
+    window.open(url, "_blank");
+    return;
+  }
+
+  // pdf — открывается в браузере
+  if (ext === "pdf") {
+    window.open(url, "_blank");
+    return;
+  }
+
+  // doc/docx — скачивание
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = file.filename;
+  a.click();
+};
+
   if (!ticket) return <div className="page">Loading...</div>;
 
   return (
@@ -69,32 +93,48 @@ export default function TicketDetails() {
           <div>
             <span className="label">Assigned:</span>
             <span className="badge soft">
-              {ticket.assignedTo || "unassigned"}
+              {ticket.assignedTo?.name || "unassigned"}
             </span>
           </div>
 
         </div>
 
         {/* FILES */}
-        {ticket.attachments?.length > 0 && (
-          <div className="attachments">
-            <h3>Files</h3>
+{ticket.attachments?.length > 0 && (
+  <div className="attachments">
+    <h3>Files</h3>
 
-            <div className="attachments-grid">
-              {ticket.attachments.map((f, i) => (
-                <a
-                  key={i}
-                  href={f.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="file-card"
-                >
-                  📎 {f.filename}
-                </a>
-              ))}
-            </div>
+    <div className="attachments-grid">
+      {ticket.attachments.map((f, i) => {
+        const ext = f.filename.split(".").pop().toLowerCase();
+
+        const isImage = ["jpg", "jpeg", "png", "webp", "gif"].includes(ext);
+
+        return (
+          <div
+            key={i}
+            className="file-card"
+            onClick={() => openFile(f)}
+            style={{ cursor: "pointer" }}
+          >
+
+            {isImage ? (
+              <img
+                src={`http://localhost:5000${f.url}`}
+                className="file-thumb"
+              />
+            ) : (
+              <div className="file-icon">
+                📄 {f.filename}
+              </div>
+            )}
+
           </div>
-        )}
+        );
+      })}
+    </div>
+  </div>
+)}
 
       </div>
 
