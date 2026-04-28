@@ -263,27 +263,32 @@ export const addComment = async (req, res) => {
 
     const ticket = await Ticket.findById(id);
 
-    if (!ticket) {
-      return res.status(404).json({ error: "Ticket not found" });
-    }
-
-    ticket.comments.push({
+    const newComment = {
       userId: req.user.userId,
       message,
-    });
+      createdAt: new Date(),
+    };
 
+    ticket.comments.push(newComment);
     await ticket.save();
 
-    res.json({
-      message: "Comment added",
-      ticket,
+    // 🔥 ВАЖНО — populate чтобы имя пришло
+    await ticket.populate("comments.userId", "name");
+
+    const io = req.app.get("io");
+
+    // отправляем ВСЕМ в комнате тикета
+    io.to(id).emit("new_comment", {
+      ticketId: id,
+      comment: ticket.comments[ticket.comments.length - 1],
     });
+
+    res.json({ message: "Comment added" });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 // =======================================================
 // 9. CLOSE TICKET
@@ -331,7 +336,8 @@ export const getTicketById = async (req, res) => {
 
 const ticket = await Ticket.findById(id)
   .populate("userId", "name email")
-  .populate("assignedTo", "name role");
+  .populate("assignedTo", "name role")
+  .populate("comments.userId", "name");
 
     if (!ticket) {
       return res.status(404).json({ message: "Ticket not found" });
