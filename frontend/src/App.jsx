@@ -2,10 +2,14 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AdminDashboard from "./pages/AdminDashboard";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
-import OperatorDashboard from "./pages/OperatorDashboard";
 import Register from "./pages/Register";
 import SpecialistDashboard from "./pages/SpecialistDashboard";
 import TicketDetails from "./pages/TicketDetails";
+import Analytics from "./pages/operator/Analytics";
+import KnowledgeBase from "./pages/operator/KnowledgeBase";
+import MLAssistant from "./pages/operator/MLAssistant";
+import OperatorLayout from "./pages/operator/OperatorLayout";
+import Tickets from "./pages/operator/Tickets";
 
 function App() {
   return (
@@ -15,9 +19,15 @@ function App() {
   <Route path="/dashboard" element={<Dashboard />} />
   <Route path="/register" element={<Register />} />
   <Route path="/ticket/:id" element={<TicketDetails />} />
-  <Route path="/operator" element={<OperatorDashboard />} />
   <Route path="/admin" element={<AdminDashboard />} />
   <Route path="/specialist" element={<SpecialistDashboard />} />
+  <Route path="/operator" element={<OperatorLayout />}>
+    <Route index element={<Dashboard />} />
+    <Route path="tickets" element={<Tickets />} />
+    <Route path="ml" element={<MLAssistant />} />
+    <Route path="knowledge" element={<KnowledgeBase />} />
+    <Route path="analytics" element={<Analytics />} />
+  </Route>
 </Routes>
     </BrowserRouter>
   );

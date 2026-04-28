@@ -1292,3 +1292,68 @@ html, body {
 .back-btn:active {
   transform: translateY(0px) scale(0.98);
 }
+
+.operator-layout {
+  display: flex;
+  height: 100vh;
+  background: #0f1115;
+  color: white;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 30px;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nav a {
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  padding: 10px;
+  border-radius: 10px;
+  transition: 0.2s;
+}
+
+.nav a:hover {
+  background: rgba(255,255,255,0.05);
+  color: white;
+}
+
+.nav a.active {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+/* MAIN */
+.operator-main {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* logout */
+.logout-btn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255,0,0,0.15);
+  color: white;
+  cursor: pointer;
+}
