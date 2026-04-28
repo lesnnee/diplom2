@@ -7,8 +7,12 @@ import { fileURLToPath } from "url";
 
 import { connectDB } from "./config/db.js";
 
+import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import logsRoutes from "./routes/logs.routes.js";
 import operatorRoutes from "./routes/operator.routes.js";
+import settingsRoutes from "./routes/settings.routes.js";
+import statsRoutes from "./routes/statistics.routes.js";
 import ticketRoutes from "./routes/ticket.routes.js";
 
 dotenv.config({ path: "../.env" });
@@ -44,6 +48,10 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/operator", operatorRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/admin/settings", settingsRoutes);
+app.use("/api/admin/logs", logsRoutes);
+app.use("/api/admin/statistics", statsRoutes);
 
 /* =========================
    ERROR HANDLER

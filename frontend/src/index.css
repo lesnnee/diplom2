@@ -1395,7 +1395,7 @@ html, body {
 /* STATS */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 15px;
 }
 
@@ -1473,4 +1473,89 @@ html, body {
   margin-top: 10px;
   display: flex;
   gap: 10px;
+}
+
+.users-page {
+  display: flex;
+  gap: 20px;
+}
+
+.user-form {
+  width: 300px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.users-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.user-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.settings-page {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.block {
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.list {
+  margin-bottom: 10px;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+}
+
+.logs-page {
+  padding: 20px;
+}
+
+.logs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.log-card {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.stats-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.chart {
+  padding: 20px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
 }
