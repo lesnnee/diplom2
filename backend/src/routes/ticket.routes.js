@@ -1,5 +1,6 @@
 import express from "express";
 import { createTicket } from "../controllers/ticket.controller.js";
+import { authenticate } from "../middleware/authMiddleware.js";
 import { fixMultipartEncoding } from "../middleware/fixMultipartEncoding.js";
 import upload from "../middleware/upload.js";
 
@@ -9,6 +10,7 @@ import {
   closeTicket,
   deleteTicket,
   getAllTickets,
+  getAssignedTickets,
   getMyTickets,
   getTicketById,
   getTicketsByCategory,
@@ -16,7 +18,7 @@ import {
   updateStatus
 } from "../controllers/ticket.controller.js";
 
-import { authenticate, authorizeRoles } from "../middleware/authMiddleware.js";
+import { authorizeRoles } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -178,6 +180,21 @@ router.delete(
   authenticate,
   authorizeRoles("admin"),
   deleteTicket
+);
+
+router.get(
+  "/assigned",
+  authenticate,
+  authorizeRoles(
+    "operator",
+    "admin",
+    "it_support",
+    "network_admin",
+    "sysadmin",
+    "security",
+    "hardware_support"
+  ),
+  getAssignedTickets
 );
 
 export default router;

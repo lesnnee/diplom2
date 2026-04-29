@@ -51,7 +51,7 @@ export const createTicket = async (req, res) => {
 
 const specialist = await findBestSpecialist(specialistRole);
 
-const assignedTo = specialist?._id || "operator";
+const assignedTo = specialist?._id || null;
 // обработка файлов
 let attachments = [];
 
@@ -369,4 +369,19 @@ const ticket = await Ticket.findById(id)
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+};
+
+export const getAssignedTickets = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const tickets = await Ticket.find({assignedTo: userId })
+      .sort({ createdAt: -1 });
+
+    res.json(tickets);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+  
 };
