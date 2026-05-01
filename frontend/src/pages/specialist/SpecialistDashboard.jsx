@@ -4,7 +4,7 @@ import api from "../../api/axios";
 
 export default function SpecialistDashboard() {
   const [user, setUser] = useState(null);
-  const [stats, setStats] = useState(null);
+  const [tickets, setTickets] = useState([]);
 
   const navigate = useNavigate();
 
@@ -14,19 +14,43 @@ export default function SpecialistDashboard() {
 
   const loadData = async () => {
     try {
-      const [meRes, statsRes] = await Promise.all([
+      const [meRes, ticketsRes] = await Promise.all([
         api.get("/auth/me"),
-        api.get("/operator/stats") // временно используем тот же endpoint
+        api.get("/tickets/assigned") // 👈 ВАЖНО: реальные тикеты специалиста
       ]);
 
       setUser(meRes.data);
-      setStats(statsRes.data);
+      setTickets(ticketsRes.data);
     } catch (err) {
       console.error(err);
     }
   };
 
-  if (!user || !stats) return <div className="page">Loading...</div>;
+  if (!user) return <div className="page">Loading...</div>;
+
+  // =========================
+  // 📊 ЛОГИКА НАГРУЗКИ
+  // =========================
+
+  const workload = tickets.reduce((sum, t) => {
+    switch (t.status) {
+      case "new":
+        return sum + 1;
+      case "in_progress":
+        return sum + 3;
+      case "waiting_user":
+        return sum + 2;
+      default:
+        return sum;
+    }
+  }, 0);
+
+  const maxLoad = 40;
+  const loadPercent = Math.min((workload / maxLoad) * 100, 100);
+
+  const new_tickets = tickets.filter(t => t.status === "new").length;
+  const inProgress = tickets.filter(t => t.status === "in_progress").length;
+  const doneToday = tickets.filter(t => t.status === "done").length;
 
   return (
     <div className="op-dashboard">
@@ -46,22 +70,23 @@ export default function SpecialistDashboard() {
       <div className="stats-grid">
 
         <div className="glass card">
-          <h3>Assigned</h3>
-          <p className="big">{stats.assigned}</p>
+          <h3>New</h3>
+          <p className="big">{new_tickets}</p>
         </div>
 
         <div className="glass card">
           <h3>In Progress</h3>
-          <p className="big">{stats.inProgress}</p>
+          <p className="big">{inProgress}</p>
         </div>
 
         <div className="glass card">
           <h3>Resolved</h3>
-          <p className="big">{stats.doneToday}</p>
+          <p className="big">{doneToday}</p>
         </div>
 
       </div>
 
+      {/* WORKLOAD */}
       <div className="glass card status-card">
 
         <h3>Workload</h3>
@@ -69,15 +94,16 @@ export default function SpecialistDashboard() {
         <div className="progress-bar">
           <div
             className="progress-fill"
-            style={{ width: `${stats.loadPercent}%` }}
+            style={{ width: `${loadPercent}%` }}
           />
         </div>
 
         <p>
-          {stats.loadPercent < 40 && "Low load"}
-          {stats.loadPercent >= 40 && stats.loadPercent < 75 && "Medium load"}
-          {stats.loadPercent >= 75 && "High load"}
+          {loadPercent < 40 && "Low load"}
+          {loadPercent >= 40 && loadPercent < 75 && "Medium load"}
+          {loadPercent >= 75 && "High load"}
         </p>
+
 
       </div>
 
