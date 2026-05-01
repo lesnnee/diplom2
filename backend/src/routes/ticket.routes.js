@@ -1,5 +1,5 @@
 import express from "express";
-import { createTicket } from "../controllers/ticket.controller.js";
+import { createTicket, getAssignedTickets } from "../controllers/ticket.controller.js";
 import { fixMultipartEncoding } from "../middleware/fixMultipartEncoding.js";
 import upload from "../middleware/upload.js";
 
@@ -58,6 +58,20 @@ router.get(
   getMyTickets
 );
 
+router.get(
+  "/assigned",
+  authenticate,
+  authorizeRoles(
+    "operator",
+    "admin",
+    "it_support",
+    "network_admin",
+    "sysadmin",
+    "security",
+    "hardware_support"
+  ),
+  getAssignedTickets
+);
 
 // =======================================================
 // CATEGORY TICKETS (specialists)
@@ -179,6 +193,8 @@ router.delete(
   authorizeRoles("admin"),
   deleteTicket
 );
+
+
 
 export default router;
 
