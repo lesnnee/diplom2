@@ -9,6 +9,7 @@ import {
   closeTicket,
   deleteTicket,
   getAllTickets,
+  getKnowledgeTickets,
   getMyTickets,
   getTicketById,
   getTicketsByCategory,
@@ -71,6 +72,21 @@ router.get(
     "hardware_support"
   ),
   getAssignedTickets
+);
+
+router.get(
+  "/knowledge",
+  authenticate,
+  authorizeRoles(
+    "operator",
+    "admin",
+    "it_support",
+    "network_admin",
+    "sysadmin",
+    "security",
+    "hardware_support"
+  ),
+  getKnowledgeTickets
 );
 
 // =======================================================

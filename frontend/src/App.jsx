@@ -48,6 +48,7 @@ function App() {
   <Route path="tickets" element={<MyTickets />} />
   <Route path="knowledge" element={<KnowledgeBase />} />
 </Route>
+
 </Routes>
     </BrowserRouter>
   );

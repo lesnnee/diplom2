@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import { connectDB } from "./config/db.js";
 
 import adminRoutes from "./routes/admin.routes.js";
+import articleRoutes from "./routes/article.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import logsRoutes from "./routes/logs.routes.js";
 import operatorRoutes from "./routes/operator.routes.js";
@@ -52,6 +53,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/admin/settings", settingsRoutes);
 app.use("/api/admin/logs", logsRoutes);
 app.use("/api/admin/statistics", statsRoutes);
+app.use("/api/articles", articleRoutes);
 
 /* =========================
    ERROR HANDLER

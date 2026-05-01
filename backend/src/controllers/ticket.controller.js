@@ -270,6 +270,12 @@ export const addComment = async (req, res) => {
       createdAt: new Date(),
     };
 
+    if (ticket.status === "done") {
+  return res.status(400).json({
+    message: "Cannot comment on closed ticket"
+  });
+}
+
     ticket.comments.push(newComment);
     await ticket.save();
 
@@ -378,12 +384,42 @@ export const getAssignedTickets = async (req, res) => {
 
     const tickets = await Ticket.find({
       assignedTo: new mongoose.Types.ObjectId(userId),
-    }).sort({ createdAt: -1 });
+    }).populate("userId", "name email")
+    .sort({ createdAt: -1 });
 
     res.json(tickets);
 
   } catch (err) {
     console.error("ASSIGNED ERROR:", err);
     res.status(500).json({ error: err.message });
+  }
+};
+
+export const getKnowledgeTickets = async (req, res) => {
+  try {
+    const user = req.user;
+
+    // 🧠 маппинг роли → категории
+    const roleCategoryMap = {
+      network_admin: "network",
+      it_support: "software",
+      sysadmin: "infrastructure",
+      security: "security",
+      hardware_support: "hardware",
+    };
+
+    const category = roleCategoryMap[user.role];
+
+    const tickets = await Ticket.find({
+      status: "done",
+      category: category,
+    })
+      .populate("userId", "name")
+      .sort({ createdAt: -1 });
+
+    res.json(tickets);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
   }
 };

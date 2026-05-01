@@ -139,6 +139,8 @@ navigate("/specialist/tickets");
 
   if (!ticket) return <div className="page">Loading...</div>;
 
+   const isClosed = ticket?.status === "done";
+
   return (
     <div className="ticket-layout">
 
@@ -259,16 +261,26 @@ navigate("/specialist/tickets");
           })}
         </div>
 
-        <div className="comment-box">
-          <input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Write comment..."
-          />
+<div className="comment-box">
 
-          <button onClick={addComment}>Send</button>
-        </div>
+  <input
+    value={message}
+    onChange={(e) => setMessage(e.target.value)}
+    onKeyDown={handleKeyDown}
+    placeholder={isClosed ? "Ticket is closed" : "Write comment..."}
+    disabled={isClosed}
+    className={isClosed ? "disabled-input" : ""}
+  />
+
+  <button
+    onClick={addComment}
+    disabled={isClosed || !message.trim()}
+    className={isClosed ? "disabled-btn" : ""}
+  >
+    Send
+  </button>
+
+</div>
 
         {/* =========================
             CLOSE BUTTON (ТОЛЬКО ДЛЯ ASSIGNED)

@@ -1762,3 +1762,97 @@ html, body {
   position: relative;
   overflow: hidden;
 }
+
+.kb-page {
+  padding: 20px;
+}
+
+/* grid 4 в ряд */
+.ticket-list.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.ticket-card {
+  padding: 16px;
+  border-radius: 16px;
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+.ticket-card:hover {
+  transform: translateY(-4px);
+}
+
+/* стекло */
+.glass {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* верх */
+.ticket-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.priority {
+  font-weight: bold;
+  opacity: 0.7;
+}
+
+/* текст */
+.title {
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.desc {
+  font-size: 14px;
+  opacity: 0.7;
+  margin-bottom: 10px;
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+/* tabs */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tab {
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  cursor: pointer;
+}
+
+.tab.active {
+  background: rgba(255,255,255,0.15);
+}
+
+/* empty */
+.empty {
+  opacity: 0.6;
+}
+
+.disabled-input {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.disabled-btn {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
