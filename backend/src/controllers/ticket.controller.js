@@ -17,11 +17,10 @@ async function mlClassifier(description) {
   } catch (err) {
     console.error("ML error:", err.message);
 
-    // fallback
     return {
       category: "unknown",
       priority: 3,
-      confidence: 0
+      confidence: 0,
     };
   }
 }
@@ -33,10 +32,8 @@ async function mlClassifier(description) {
 export const createTicket = async (req, res) => {
   try {
     const { description } = req.body;
-
     const userId = req.user.userId;
 
-    // AI classification
     const ml = await mlClassifier(description);
 
     const categoryToRole = {
@@ -50,29 +47,28 @@ export const createTicket = async (req, res) => {
 
     const specialistRole = categoryToRole[ml.category] || "operator";
 
-const specialist = await findBestSpecialist(specialistRole);
+    const specialist = await findBestSpecialist(specialistRole);
+    const assignedTo = specialist?._id || null;
 
-const assignedTo = specialist?._id || null;
-// обработка файлов
-let attachments = [];
+    let attachments = [];
 
-if (req.files && req.files.length > 0) {
-  attachments = req.files.map((file) => ({
-    filename: file.originalname,   // имя от пользователя (для UI)
-    safeName: file.filename,       // реальное имя на диске
-    url: `/uploads/${file.filename}`,
-    mimeType: file.mimetype,
-  }));
-}
+    if (req.files && req.files.length > 0) {
+      attachments = req.files.map((file) => ({
+        filename: file.originalname,
+        safeName: file.filename,
+        url: `/uploads/${file.filename}`,
+        mimeType: file.mimetype,
+      }));
+    }
 
-   const ticket = await Ticket.create({
-  userId,
-  description,
-  category: ml.category,
-  priority: ml.priority,
-  assignedTo,
-  attachments, // 👈 ВАЖНО
-});
+    const ticket = await Ticket.create({
+      userId,
+      description,
+      category: ml.category,
+      priority: ml.priority,
+      assignedTo,
+      attachments,
+    });
 
     res.status(201).json({
       message: "Ticket created",
@@ -90,13 +86,10 @@ if (req.files && req.files.length > 0) {
 // =======================================================
 export const getMyTickets = async (req, res) => {
   try {
-    const userId = req.user.userId;
-
-    const tickets = await Ticket.find({ userId })
+    const tickets = await Ticket.find({ userId: req.user.userId })
       .sort({ createdAt: -1 });
 
     res.json(tickets);
-
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -104,7 +97,7 @@ export const getMyTickets = async (req, res) => {
 
 
 // =======================================================
-// 3. ALL TICKETS (operator/admin)
+// 3. ALL TICKETS
 // =======================================================
 export const getAllTickets = async (req, res) => {
   try {
@@ -129,7 +122,7 @@ export const getAllTickets = async (req, res) => {
 
 
 // =======================================================
-// 4. CATEGORY TICKETS (specialist)
+// 4. CATEGORY TICKETS
 // =======================================================
 export const getTicketsByCategory = async (req, res) => {
   try {
@@ -145,9 +138,7 @@ export const getTicketsByCategory = async (req, res) => {
     };
 
     if (roleToCategory[role] && roleToCategory[role] !== category) {
-      return res.status(403).json({
-        error: "Access denied: wrong category",
-      });
+      return res.status(403).json({ error: "Access denied" });
     }
 
     const tickets = await Ticket.find({ category })
@@ -162,7 +153,7 @@ export const getTicketsByCategory = async (req, res) => {
 
 
 // =======================================================
-// 5. UPDATE STATUS
+// 5. UPDATE STATUS (🔥 FIXED)
 // =======================================================
 export const updateStatus = async (req, res) => {
   try {
@@ -184,11 +175,38 @@ export const updateStatus = async (req, res) => {
       return res.status(403).json({ error: "Access denied" });
     }
 
-    const ticket = await Ticket.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true }
-    );
+    const ticket = await Ticket.findById(id);
+
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    const oldStatus = ticket.status;
+
+    // ======================
+    // HISTORY
+    // ======================
+    ticket.history.push({
+      action: "status_change",
+      oldValue: oldStatus,
+      newValue: status,
+      changedBy: req.user.userId,
+    });
+
+    // ======================
+    // CLOSED AT LOGIC
+    // ======================
+    if (status === "done") {
+      ticket.closedAt = new Date();
+    }
+
+    if (status === "in_progress") {
+      ticket.closedAt = null;
+    }
+
+    ticket.status = status;
+
+    await ticket.save();
 
     res.json(ticket);
 
@@ -199,7 +217,7 @@ export const updateStatus = async (req, res) => {
 
 
 // =======================================================
-// 6. ML CORRECTION (feedback)
+// 6. ML CORRECTION
 // =======================================================
 export const mlCorrection = async (req, res) => {
   try {
@@ -213,15 +231,12 @@ export const mlCorrection = async (req, res) => {
     );
 
     await axios.post("http://localhost:8000/feedback", {
-  description: ticket.description,
-  category,
-  priority
-});
-
-    res.json({
-      message: "ML corrected",
-      ticket,
+      description: ticket.description,
+      category,
+      priority,
     });
+
+    res.json({ message: "ML corrected", ticket });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -230,7 +245,7 @@ export const mlCorrection = async (req, res) => {
 
 
 // =======================================================
-// 7. ASSIGN TICKET
+// 7. ASSIGN
 // =======================================================
 export const assignTicket = async (req, res) => {
   try {
@@ -243,10 +258,7 @@ export const assignTicket = async (req, res) => {
       { new: true }
     );
 
-    res.json({
-      message: "Ticket assigned",
-      ticket,
-    });
+    res.json({ message: "Ticket assigned", ticket });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -255,7 +267,7 @@ export const assignTicket = async (req, res) => {
 
 
 // =======================================================
-// 8. ADD COMMENT
+// 8. ADD COMMENT (FIXED SAFE CHECK)
 // =======================================================
 export const addComment = async (req, res) => {
   try {
@@ -264,27 +276,25 @@ export const addComment = async (req, res) => {
 
     const ticket = await Ticket.findById(id);
 
+    if (ticket.status === "done") {
+      return res.status(400).json({
+        message: "Cannot comment on closed ticket",
+      });
+    }
+
     const newComment = {
       userId: req.user.userId,
       message,
       createdAt: new Date(),
     };
 
-    if (ticket.status === "done") {
-  return res.status(400).json({
-    message: "Cannot comment on closed ticket"
-  });
-}
-
     ticket.comments.push(newComment);
     await ticket.save();
 
-    // 🔥 ВАЖНО — populate чтобы имя пришло
     await ticket.populate("comments.userId", "name");
 
     const io = req.app.get("io");
 
-    // отправляем ВСЕМ в комнате тикета
     io.to(id).emit("new_comment", {
       ticketId: id,
       comment: ticket.comments[ticket.comments.length - 1],
@@ -297,18 +307,18 @@ export const addComment = async (req, res) => {
   }
 };
 
+
 // =======================================================
 // 9. CLOSE TICKET
 // =======================================================
 export const closeTicket = async (req, res) => {
   try {
-    const { id } = req.params;
+    const ticket = await Ticket.findById(id);
 
-    const ticket = await Ticket.findByIdAndUpdate(
-      id,
-      { status: "done" },
-      { new: true }
-    );
+    ticket.status = "done";
+    ticket.closedAt = new Date();
+
+    await ticket.save();
 
     res.json(ticket);
 
@@ -319,12 +329,11 @@ export const closeTicket = async (req, res) => {
 
 
 // =======================================================
-// 10. DELETE TICKET (admin)
+// 10. DELETE
 // =======================================================
 export const deleteTicket = async (req, res) => {
   try {
     await Ticket.findByIdAndDelete(req.params.id);
-
     res.json({ message: "Ticket deleted" });
 
   } catch (err) {
@@ -334,28 +343,26 @@ export const deleteTicket = async (req, res) => {
 
 
 // =======================================================
-// 11. GET TICKET BY ID (secure)
+// 11. GET BY ID
 // =======================================================
 export const getTicketById = async (req, res) => {
   try {
     const { id } = req.params;
     const { role, userId } = req.user;
 
-const ticket = await Ticket.findById(id)
-  .populate("userId", "name email")
-  .populate("assignedTo", "name role")
-  .populate("comments.userId", "name");
+    const ticket = await Ticket.findById(id)
+      .populate("userId", "name email")
+      .populate("assignedTo", "name role")
+      .populate("comments.userId", "name");
 
     if (!ticket) {
       return res.status(404).json({ message: "Ticket not found" });
     }
 
-    // USER → only own ticket
     if (role === "user" && ticket.userId._id.toString() !== userId) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    // SPECIALIST → only category access
     const roleToCategory = {
       it_support: "software",
       network_admin: "network",
@@ -364,10 +371,7 @@ const ticket = await Ticket.findById(id)
       hardware_support: "hardware",
     };
 
-    if (
-      roleToCategory[role] &&
-      ticket.category !== roleToCategory[role]
-    ) {
+    if (roleToCategory[role] && ticket.category !== roleToCategory[role]) {
       return res.status(403).json({ message: "Wrong category" });
     }
 
@@ -378,28 +382,32 @@ const ticket = await Ticket.findById(id)
   }
 };
 
+
+// =======================================================
+// 12. ASSIGNED
+// =======================================================
 export const getAssignedTickets = async (req, res) => {
   try {
-    const userId = req.user.userId;
-
     const tickets = await Ticket.find({
-      assignedTo: new mongoose.Types.ObjectId(userId),
-    }).populate("userId", "name email")
-    .sort({ createdAt: -1 });
+      assignedTo: new mongoose.Types.ObjectId(req.user.userId),
+    })
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 });
 
     res.json(tickets);
 
   } catch (err) {
-    console.error("ASSIGNED ERROR:", err);
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
 
+
+// =======================================================
+// 13. KNOWLEDGE BASE
+// =======================================================
 export const getKnowledgeTickets = async (req, res) => {
   try {
-    const user = req.user;
-
-    // 🧠 маппинг роли → категории
     const roleCategoryMap = {
       network_admin: "network",
       it_support: "software",
@@ -408,18 +416,45 @@ export const getKnowledgeTickets = async (req, res) => {
       hardware_support: "hardware",
     };
 
-    const category = roleCategoryMap[user.role];
+    const category = roleCategoryMap[req.user.role];
 
     const tickets = await Ticket.find({
       status: "done",
-      category: category,
+      category,
     })
       .populate("userId", "name")
       .sort({ createdAt: -1 });
 
     res.json(tickets);
+
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: err.message });
+  }
+};
+
+// =======================================================
+// LOGS
+// =======================================================
+export const getLogs = async (req, res) => {
+  try {
+    const tickets = await Ticket.find()
+      .populate("history.changedBy", "name role")
+      .sort({ updatedAt: -1 });
+
+    const logs = tickets.flatMap((t) =>
+      t.history.map((h) => ({
+        ticketId: t._id,
+        action: h.action,
+        oldValue: h.oldValue,
+        newValue: h.newValue,
+        user: h.changedBy?.name,
+        role: h.changedBy?.role,
+        timestamp: h.timestamp,
+      }))
+    );
+
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

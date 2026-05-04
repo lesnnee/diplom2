@@ -1,5 +1,5 @@
 import express from "express";
-import { createTicket, getAssignedTickets } from "../controllers/ticket.controller.js";
+import { createTicket, getAssignedTickets, getLogs } from "../controllers/ticket.controller.js";
 import { fixMultipartEncoding } from "../middleware/fixMultipartEncoding.js";
 import upload from "../middleware/upload.js";
 
@@ -48,6 +48,8 @@ router.post(
   fixMultipartEncoding,
   createTicket
 );
+
+router.get("/logs", getLogs);
 
 // =======================================================
 // MY TICKETS (user)

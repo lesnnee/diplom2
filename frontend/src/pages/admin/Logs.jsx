@@ -4,17 +4,17 @@ import api from "../../api/axios";
 export default function Logs() {
   const [logs, setLogs] = useState([]);
 
-  const loadLogs = async () => {
-    try {
-      const res = await api.get("/admin/logs");
-      setLogs(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
-    loadLogs();
+    const load = async () => {
+      try {
+        const res = await api.get("/admin/logs");
+        setLogs(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    load();
   }, []);
 
   return (
@@ -24,19 +24,25 @@ export default function Logs() {
 
       <div className="logs-list">
 
-        {logs.map((log) => (
-          <div key={log._id} className="log-card glass">
+        {logs.map((l, i) => (
+          <div key={i} className="log-item glass">
 
-            <div className="log-action">
-              {log.action}
+            <div className="log-top">
+              <span className="badge soft">{l.action}</span>
+              <span className="time">
+                {new Date(l.timestamp).toLocaleString()}
+              </span>
             </div>
 
-            <div className="log-user">
-              {log.user?.name || "System"}
-            </div>
+            <div className="log-body">
+              <p>
+                <b>{l.user}</b> ({l.role}) changed ticket
+                <span className="ticket-id"> {l.ticketId}</span>
+              </p>
 
-            <div className="log-time">
-              {new Date(log.createdAt).toLocaleString()}
+              <p className="change">
+                {l.oldValue} → <b>{l.newValue}</b>
+              </p>
             </div>
 
           </div>

@@ -8,8 +8,6 @@ const TicketSchema = new mongoose.Schema(
       required: true,
     },
 
-    // ❌ убрали title
-
     description: { type: String, required: true },
 
     status: {
@@ -20,14 +18,6 @@ const TicketSchema = new mongoose.Schema(
 
     category: {
       type: String,
-      enum: [
-        "software",
-        "network",
-        "infrastructure",
-        "security",
-        "hardware",
-        "unknown",
-      ],
       default: "unknown",
     },
 
@@ -36,6 +26,11 @@ const TicketSchema = new mongoose.Schema(
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
+    },
+
+    closedAt: {
+      type: Date,
       default: null,
     },
 

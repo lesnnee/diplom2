@@ -1,48 +1,29 @@
 import express from "express";
+import {
+    addCategory,
+    addPriority,
+    addRole,
+    deleteCategory,
+    deletePriority,
+    deleteRole,
+    getSettings
+} from "../controllers/settings.controller.js";
 
 const router = express.Router();
 
-// 📊 GET ALL SETTINGS
-router.get("/", async (req, res) => {
-  res.json({
-    roles: ["user", "operator", "admin"],
-    categories: ["network", "software", "hardware", "security"],
-    priorities: ["low", "medium", "high", "critical"],
-  });
-});
+// settings
+router.get("/", getSettings);
 
+// roles
+router.post("/roles", addRole);
+router.delete("/roles/:role", deleteRole);
 
-// ➕ ROLES
-router.post("/roles", async (req, res) => {
-  const { role } = req.body;
-  // add to DB or config
-  res.json({ message: "Role added", role });
-});
+// categories
+router.post("/categories", addCategory);
+router.delete("/categories/:category", deleteCategory);
 
-router.delete("/roles/:id", async (req, res) => {
-  res.json({ message: "Role deleted" });
-});
-
-
-// ➕ CATEGORIES
-router.post("/categories", async (req, res) => {
-  const { category } = req.body;
-  res.json({ message: "Category added", category });
-});
-
-router.delete("/categories/:id", async (req, res) => {
-  res.json({ message: "Category deleted" });
-});
-
-
-// ➕ PRIORITIES
-router.post("/priorities", async (req, res) => {
-  const { priority } = req.body;
-  res.json({ message: "Priority added", priority });
-});
-
-router.delete("/priorities/:id", async (req, res) => {
-  res.json({ message: "Priority deleted" });
-});
+// priorities
+router.post("/priorities", addPriority);
+router.delete("/priorities/:priority", deletePriority);
 
 export default router;

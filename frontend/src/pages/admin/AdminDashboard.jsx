@@ -26,6 +26,16 @@ export default function AdminDashboard() {
     loadData();
   }, []);
 
+const formatTime = (min) => {
+  const d = Math.floor(min / 1440); // 1440 = 60 * 24
+  const h = Math.floor((min % 1440) / 60);
+  const m = min % 60;
+
+  if (d === 0 && h === 0) return `${m}m`;
+  if (d === 0) return `${h}h ${m}m`;
+  return `${d}d ${h}h`;
+};
+
   if (!stats || !user) return <div className="page">Loading...</div>;
 
   return (
@@ -57,14 +67,35 @@ export default function AdminDashboard() {
           <p className="big">{stats.tickets}</p>
         </div>
 
-        <div className="glass card">
-          <h3>Open Tickets</h3>
-          <p className="big">{stats.openTickets}</p>
-        </div>
 
         <div className="glass card">
           <h3>Active Operators</h3>
           <p className="big">{stats.operators}</p>
+        </div>
+
+      </div>
+
+            <div className="stats-grid">
+
+        <div className="glass card">
+          <h3>Avg Resolution</h3>
+          <p className="big">
+             {formatTime(stats.avgResolutionTime)}
+          </p>
+        </div>
+
+        <div className="glass card">
+          <h3>Success Rate</h3>
+          <p className="big">
+            {stats.successRate}%
+          </p>
+        </div>
+
+        <div className="glass card">
+          <h3>Overloaded</h3>
+          <p className="big">
+            {stats.overloadedUsers}
+          </p>
         </div>
 
       </div>

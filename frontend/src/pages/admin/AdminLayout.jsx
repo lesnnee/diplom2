@@ -29,9 +29,6 @@ export default function AdminLayout() {
             📈 Statistics
           </NavLink>
 
-          <NavLink to="/admin/logs">
-            📜 Logs
-          </NavLink>
 
         </nav>
 

@@ -10,62 +10,116 @@ export default function Settings() {
   const [newCategory, setNewCategory] = useState("");
   const [newPriority, setNewPriority] = useState("");
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
+  // ======================
+  // LOAD SETTINGS
+  // ======================
   const loadSettings = async () => {
     try {
       const res = await api.get("/admin/settings");
 
-      setRoles(res.data.roles);
-      setCategories(res.data.categories);
-      setPriorities(res.data.priorities);
+      setRoles(res.data.roles || []);
+      setCategories(res.data.categories || []);
+      setPriorities(res.data.priorities || []);
     } catch (err) {
       console.error(err);
     }
   };
 
-  // ROLES
-  const addRole = async () => {
-    await api.post("/admin/settings/roles", { role: newRole });
-    setNewRole("");
+  useEffect(() => {
     loadSettings();
+  }, []);
+
+  // ======================
+  // HELPERS
+  // ======================
+  const refresh = () => loadSettings();
+
+  // ======================
+  // ROLES
+  // ======================
+  const addRole = async () => {
+    if (!newRole.trim()) return;
+
+    try {
+      await api.post("/admin/settings/roles", {
+        role: newRole.trim(),
+      });
+
+      setNewRole("");
+      refresh();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const deleteRole = async (role) => {
-    await api.delete(`/admin/settings/roles/${role}`);
-    loadSettings();
+    try {
+      await api.delete(`/admin/settings/roles/${role}`);
+      refresh();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
+  // ======================
   // CATEGORIES
+  // ======================
   const addCategory = async () => {
-    await api.post("/admin/settings/categories", {
-      category: newCategory,
-    });
-    setNewCategory("");
-    loadSettings();
+    if (!newCategory.trim()) return;
+
+    try {
+      await api.post("/admin/settings/categories", {
+        category: newCategory.trim(),
+      });
+
+      setNewCategory("");
+      refresh();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const deleteCategory = async (cat) => {
-    await api.delete(`/admin/settings/categories/${cat}`);
-    loadSettings();
+    try {
+      await api.delete(`/admin/settings/categories/${cat}`);
+      refresh();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
+  // ======================
   // PRIORITIES
+  // ======================
   const addPriority = async () => {
-    await api.post("/admin/settings/priorities", {
-      priority: newPriority,
-    });
-    setNewPriority("");
-    loadSettings();
+    const value = Number(newPriority);
+
+    if (!value || value < 1) return;
+
+    try {
+      await api.post("/admin/settings/priorities", {
+        priority: value,
+      });
+
+      setNewPriority("");
+      refresh();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const deletePriority = async (p) => {
-    await api.delete(`/admin/settings/priorities/${p}`);
-    loadSettings();
+    try {
+      await api.delete(`/admin/settings/priorities/${p}`);
+      refresh();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
+  // ======================
+  // UI
+  // ======================
   return (
     <div className="settings-page glass">
 
@@ -120,7 +174,7 @@ export default function Settings() {
         <div className="list">
           {priorities.map((p) => (
             <div key={p} className="item">
-              <span>{p}</span>
+              <span>P{p}</span>
               <button onClick={() => deletePriority(p)}>🗑</button>
             </div>
           ))}
@@ -129,7 +183,7 @@ export default function Settings() {
         <input
           value={newPriority}
           onChange={(e) => setNewPriority(e.target.value)}
-          placeholder="New priority"
+          placeholder="New priority (1-5)"
         />
 
         <button onClick={addPriority}>Add Priority</button>
