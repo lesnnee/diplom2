@@ -3,21 +3,66 @@ import api from "../../api/axios";
 
 export default function OperatorDashboard() {
   const [user, setUser] = useState(null);
-  const [stats, setStats] = useState(null);
+  const [tickets, setTickets] = useState([]);
 
   useEffect(() => {
     const load = async () => {
-      const me = await api.get("/auth/me");
-      setUser(me.data);
+      try {
+        const [meRes, ticketsRes] = await Promise.all([
+          api.get("/auth/me"),
+          api.get("/tickets/assigned") // 👈 реальные тикеты
+        ]);
 
-      const res = await api.get("/operator/stats"); 
-      setStats(res.data);
+        setUser(meRes.data);
+        setTickets(ticketsRes.data);
+
+      } catch (err) {
+        console.error(err);
+      }
     };
 
     load();
   }, []);
 
-  if (!user || !stats) return <div>Loading...</div>;
+  if (!user) return <div className="page">Loading...</div>;
+
+  // =========================
+  // 📊 ЛОГИКА НАГРУЗКИ (как у специалиста)
+  // =========================
+
+  const workload = tickets.reduce((sum, t) => {
+    switch (t.status) {
+      case "new":
+        return sum + 1;
+      case "in_progress":
+        return sum + 3;
+      case "waiting_user":
+        return sum + 2;
+      default:
+        return sum;
+    }
+  }, 0);
+
+  const maxLoad = 40;
+  const loadPercent = Math.min((workload / maxLoad) * 100, 100);
+
+  // =========================
+  // 📊 СТАТЫ
+  // =========================
+
+  const assigned = tickets.length;
+
+  const inProgress = tickets.filter(
+    (t) => t.status === "in_progress"
+  ).length;
+
+  const done = tickets.filter(
+    (t) => t.status === "done"
+  ).length;
+
+  const newTickets = tickets.filter(
+    (t) => t.status === "new"
+  ).length;
 
   return (
     <div className="op-dashboard">
@@ -35,27 +80,32 @@ export default function OperatorDashboard() {
 
       </div>
 
-      {/* ================= LOAD ================= */}
+      {/* ================= STATS ================= */}
       <div className="stats-grid">
 
         <div className="glass card">
           <h3>Assigned</h3>
-          <p className="big">{stats.assigned}</p>
+          <p className="big">{assigned}</p>
+        </div>
+
+        <div className="glass card">
+          <h3>New</h3>
+          <p className="big">{newTickets}</p>
         </div>
 
         <div className="glass card">
           <h3>In Progress</h3>
-          <p className="big">{stats.inProgress}</p>
+          <p className="big">{inProgress}</p>
         </div>
 
         <div className="glass card">
-          <h3>Done</h3>
-          <p className="big">{stats.doneToday}</p>
+          <h3>Resolved</h3>
+          <p className="big">{done}</p>
         </div>
 
       </div>
 
-      {/* ================= STATUS ================= */}
+      {/* ================= WORKLOAD ================= */}
       <div className="glass card status-card">
 
         <h3>Workload</h3>
@@ -63,18 +113,17 @@ export default function OperatorDashboard() {
         <div className="progress-bar">
           <div
             className="progress-fill"
-            style={{ width: `${stats.loadPercent}%` }}
+            style={{ width: `${loadPercent}%` }}
           />
         </div>
 
         <p>
-          {stats.loadPercent < 40 && "Low load"}
-          {stats.loadPercent >= 40 && stats.loadPercent < 75 && "Medium load"}
-          {stats.loadPercent >= 75 && "High load"}
+          {loadPercent < 40 && "Low load"}
+          {loadPercent >= 40 && loadPercent < 75 && "Medium load"}
+          {loadPercent >= 75 && "High load"}
         </p>
 
       </div>
-
 
     </div>
   );
