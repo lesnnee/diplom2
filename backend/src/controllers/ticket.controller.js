@@ -458,3 +458,23 @@ export const getLogs = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getAllKnowledgeTickets = async (req, res) => {
+  try {
+
+    const tickets = await Ticket.find({
+      status: "done",
+    })
+      .populate("userId", "name")
+      .sort({ closedAt: -1 });
+
+    res.json(tickets);
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      message: "Failed to load knowledge tickets",
+    });
+  }
+};

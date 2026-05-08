@@ -2318,3 +2318,261 @@ html, body {
 .ticket-id {
   opacity: 0.6;
 }
+
+/* =========================
+   KNOWLEDGE BASE
+========================= */
+
+.kb-page {
+  padding: 20px;
+  color: white;
+}
+
+.kb-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.kb-search {
+  flex: 1;
+}
+
+.kb-select {
+  width: 220px;
+}
+
+/* ARTICLES */
+
+.articles-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  max-width: 900px;
+}
+
+.article-card {
+  padding: 24px;
+  border-radius: 18px;
+}
+
+.article-header {
+  margin-bottom: 14px;
+}
+
+.article-header h2 {
+  margin: 0 0 10px 0;
+}
+
+.article-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.article-preview {
+  line-height: 1.7;
+  opacity: 0.85;
+}
+
+/* CREATE ARTICLE */
+
+.create-article {
+  max-width: 900px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  padding: 24px;
+  border-radius: 18px;
+}
+
+.article-editor {
+  min-height: 500px;
+  resize: vertical;
+
+  line-height: 1.8;
+}
+
+/* =========================
+   KB CONTROLS
+========================= */
+
+.kb-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.kb-search {
+  flex: 1;
+}
+
+.kb-select {
+  width: 220px;
+}
+
+/* =========================
+   ARTICLES
+========================= */
+
+.articles-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.article-card {
+  padding: 24px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.article-card:hover {
+  transform: translateY(-3px);
+  background: rgba(255,255,255,0.07);
+}
+
+.article-header {
+  margin-bottom: 10px;
+}
+
+.article-header h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.article-meta {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+  opacity: 0.6;
+  font-size: 13px;
+}
+
+.article-category {
+  margin-top: 10px;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.article-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+
+.tag {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  font-size: 12px;
+}
+
+.article-preview {
+  line-height: 1.7;
+  opacity: 0.85;
+}
+
+/* =========================
+   CREATE ARTICLE
+========================= */
+
+.create-article {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  max-width: 1100px;
+  margin: auto;
+}
+
+.article-editor {
+  min-height: 500px;
+  resize: vertical;
+  line-height: 1.8;
+}
+
+.article-page {
+  padding: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+.article-container {
+  width: 100%;
+  max-width: 1100px;
+  padding: 40px;
+}
+
+.article-title {
+  font-size: 42px;
+  margin-bottom: 20px;
+}
+
+.article-page-meta {
+  display: flex;
+  gap: 20px;
+  opacity: 0.6;
+  margin-bottom: 20px;
+}
+
+.article-page-tags {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.article-content {
+  white-space: pre-wrap;
+  line-height: 2;
+  font-size: 17px;
+}
+
+select {
+  background: rgba(20, 20, 25, 0.9);
+  color: white;
+}
+
+select option {
+  background: #111827;
+  color: #ffffff;
+}
+
+.articles-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  max-width: 900px;
+  margin: 0 auto; /* центрируем как поиск */
+  width: 100%;
+}
+
+/* карточка статьи теперь по ширине как input */
+.article-card {
+  width: 100%;
+}
+
+.article-editor {
+  height: 300px;
+  min-height: 300px;
+  max-height: 300px;
+
+  resize: none; /* чтобы не ломали дизайн */
+}
+
+.kb-page{
+  margin-top: -5%;
+}
+
+.kb-search {
+  width: 100%;
+  margin: 10px 0 15px 0;
+}

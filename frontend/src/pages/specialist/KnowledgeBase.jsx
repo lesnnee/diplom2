@@ -1,17 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 
 export default function KnowledgeBase() {
   const [tab, setTab] = useState("tickets");
+
   const [tickets, setTickets] = useState([]);
   const [articles, setArticles] = useState([]);
   const [user, setUser] = useState(null);
 
-    const navigate = useNavigate();
+  const [ticketSearch, setTicketSearch] = useState("");
+  const [articleSearch, setArticleSearch] = useState("");
+
+  const navigate = useNavigate();
 
   // ======================
-  // LOAD DATA
+  // LOAD
   // ======================
 
   const loadData = async () => {
@@ -25,6 +29,7 @@ export default function KnowledgeBase() {
       setUser(meRes.data);
       setTickets(ticketsRes.data);
       setArticles(articlesRes.data);
+
     } catch (err) {
       console.error(err);
     }
@@ -33,6 +38,32 @@ export default function KnowledgeBase() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // ======================
+  // FILTER TICKETS
+  // ======================
+
+  const filteredTickets = useMemo(() => {
+    return tickets.filter((t) =>
+      (t.description || "")
+        .toLowerCase()
+        .includes(ticketSearch.toLowerCase())
+    );
+  }, [tickets, ticketSearch]);
+
+  // ======================
+  // FILTER ARTICLES
+  // ======================
+
+  const filteredArticles = useMemo(() => {
+    return articles.filter((a) =>
+      (a.title + " " + (a.content || ""))
+        .toLowerCase()
+        .includes(articleSearch.toLowerCase())
+    );
+  }, [articles, articleSearch]);
+
+  // ======================
 
   if (!user) return <div className="page">Loading...</div>;
 
@@ -43,6 +74,7 @@ export default function KnowledgeBase() {
 
       {/* TABS */}
       <div className="tabs">
+
         <button
           className={tab === "tickets" ? "tab active" : "tab"}
           onClick={() => setTab("tickets")}
@@ -56,91 +88,109 @@ export default function KnowledgeBase() {
         >
           Articles ({articles.length})
         </button>
+
       </div>
 
-      {/* ====================== */}
-      {/* TICKETS TAB */}
-      {/* ====================== */}
+      {/* ======================
+          TICKETS
+      ====================== */}
 
       {tab === "tickets" && (
-        <div className="ticket-list grid">
+        <>
 
-          {tickets.length === 0 && (
-            <div className="empty">No knowledge yet</div>
-          )}
+          {/* SEARCH */}
+          <input
+            className="input kb-search"
+            placeholder="Search tickets..."
+            value={ticketSearch}
+            onChange={(e) => setTicketSearch(e.target.value)}
+          />
 
-          {tickets.map((t) => (
-            <div
-  key={t._id}
-  className="ticket-card glass clickable"
-  onClick={() => navigate(`/ticket/${t._id}`)}
->
+          <div className="ticket-list grid">
 
-              <div className="ticket-top">
-                <span className="badge done">done</span>
-                <span className="priority">P{t.priority}</span>
+            {filteredTickets.length === 0 && (
+              <div className="empty">No knowledge yet</div>
+            )}
+
+            {filteredTickets.map((t) => (
+              <div
+                key={t._id}
+                className="ticket-card glass clickable"
+                onClick={() => navigate(`/ticket/${t._id}`)}
+              >
+
+                <div className="ticket-top">
+                  <span className="badge done">done</span>
+                  <span className="priority">P{t.priority}</span>
+                </div>
+
+                <h3 className="title">
+                  {(t.description || "").slice(0, 60)}
+                </h3>
+
+                <p className="desc">
+                  {t.description}
+                </p>
+
+                <div className="meta">
+                  <span>{t.userId?.name || "User"}</span>
+                  <span>
+                    {new Date(t.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+
               </div>
+            ))}
 
-              <h3 className="title">
-                {(t.description || "").slice(0, 60)}
-              </h3>
-
-              <p className="desc">
-                {t.description}
-              </p>
-
-              <div className="meta">
-                <span>
-                  {t.userId?.name || "User"}
-                </span>
-
-                <span>
-                  {new Date(t.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-
-            </div>
-          ))}
-
-        </div>
+          </div>
+        </>
       )}
 
-      {/* ====================== */}
-      {/* ARTICLES TAB */}
-      {/* ====================== */}
+      {/* ======================
+          ARTICLES
+      ====================== */}
 
       {tab === "articles" && (
-        <div className="ticket-list grid">
+        <>
+          {/* SEARCH */}
+          <input
+            className="input kb-search"
+            placeholder="Search articles..."
+            value={articleSearch}
+            onChange={(e) => setArticleSearch(e.target.value)}
+          />
 
-          {articles.length === 0 && (
-            <div className="empty">No articles yet</div>
-          )}
+          <div className="ticket-list grid">
 
-          {articles.map((a) => (
-            <div key={a._id} className="ticket-card glass">
+            {filteredArticles.length === 0 && (
+              <div className="empty">No articles yet</div>
+            )}
 
-              <h3 className="title">
-                {a.title}
-              </h3>
+            {filteredArticles.map((a) => (
+              <div
+                key={a._id}
+                className="ticket-card glass clickable"
+                onClick={() => navigate(`/articles/${a._id}`)}
+              >
 
-              <p className="desc">
-                {(a.content || "").slice(0, 120)}
-              </p>
+                <h3 className="title">{a.title}</h3>
 
-              <div className="meta">
-                <span>
-                  {a.createdBy?.name || "Operator"}
-                </span>
+                <p className="desc">
+                  {(a.content || "").slice(0, 120)}
+                </p>
 
-                <span>
-                  {new Date(a.createdAt).toLocaleDateString()}
-                </span>
+                <div className="meta">
+                  <span>{a.createdBy?.name || "Operator"}</span>
+                  <span>
+                    {new Date(a.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+
               </div>
+            ))}
 
-            </div>
-          ))}
-
-        </div>
+          </div>
+        </>
       )}
 
     </div>

@@ -21,17 +21,11 @@ export default function OperatorLayout() {
             🎫 Tickets
           </NavLink>
 
-          <NavLink to="/operator/ml">
-            🤖 ML Assistant
-          </NavLink>
 
           <NavLink to="/operator/knowledge">
             📚 Knowledge Base
           </NavLink>
 
-          <NavLink to="/operator/analytics">
-            📊 Analytics
-          </NavLink>
 
         </nav>
 

@@ -8,6 +8,7 @@ import {
   assignTicket,
   closeTicket,
   deleteTicket,
+  getAllKnowledgeTickets,
   getAllTickets,
   getKnowledgeTickets,
   getMyTickets,
@@ -50,6 +51,8 @@ router.post(
 );
 
 router.get("/logs", getLogs);
+
+router.get("/knowledge/all", authenticate, getAllKnowledgeTickets);
 
 // =======================================================
 // MY TICKETS (user)

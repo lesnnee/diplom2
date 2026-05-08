@@ -8,6 +8,7 @@ import Users from "./pages/admin/Users";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Analytics from "./pages/operator/Analytics";
+import ArticlePage from "./pages/operator/ArticlePage";
 import MLAssistant from "./pages/operator/MLAssistant";
 import OperatorDashboard from "./pages/operator/OperatorDashboard";
 import OperatorKnowledgeBase from "./pages/operator/OperatorKnowledgeBase";
@@ -48,7 +49,10 @@ function App() {
   <Route path="tickets" element={<MyTickets />} />
   <Route path="knowledge" element={<KnowledgeBase />} />
 </Route>
-
+<Route
+  path="/articles/:id"
+  element={<ArticlePage />}
+/>
 </Routes>
     </BrowserRouter>
   );
