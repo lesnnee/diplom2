@@ -1,7 +1,14 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 
-export default function OperatorTicketCard({ ticket, reload }) {
+export default function OperatorTicketCard({
+  ticket,
+  reload,
+  currentUserId, // 👈 добавим
+}) {
+  const navigate = useNavigate();
+
   const [category, setCategory] = useState(ticket.category);
   const [priority, setPriority] = useState(ticket.priority);
   const [assignedTo, setAssignedTo] = useState(ticket.assignedTo?._id || "");
@@ -32,8 +39,16 @@ export default function OperatorTicketCard({ ticket, reload }) {
     reload();
   };
 
+  const isAssignedToMe =
+    ticket.assignedTo?._id === currentUserId;
+
   return (
-    <div className="op-ticket-card glass">
+    <div
+      className={`op-ticket-card glass clickable ${
+        isAssignedToMe ? "mine" : ""
+      }`}
+      onClick={() => navigate(`/ticket/${ticket._id}`)}
+    >
 
       {/* HEADER */}
       <div className="op-header">
@@ -45,12 +60,11 @@ export default function OperatorTicketCard({ ticket, reload }) {
 
       <p className="op-desc">{ticket.description}</p>
 
-      {/* USER INFO */}
       <div className="op-user">
         👤 {ticket.userId?.name}
       </div>
 
-      {/* AI BLOCK */}
+      {/* AI */}
       <div className="op-ai-block">
         <h4>AI Decision</h4>
 
@@ -58,17 +72,13 @@ export default function OperatorTicketCard({ ticket, reload }) {
         <div>Priority: {ai.priority}</div>
         <div>Assigned: {ai.assignedTo || "—"}</div>
 
-        <div
-          className={`confidence ${getConfidenceColor(
-            ai.confidence
-          )}`}
-        >
+        <div className={`confidence ${getConfidenceColor(ai.confidence)}`}>
           Confidence: {ai.confidence}
         </div>
       </div>
 
       {/* OVERRIDE */}
-      <div className="op-override">
+      <div className="op-override" onClick={(e) => e.stopPropagation()}>
 
         <select
           value={category}
@@ -89,13 +99,14 @@ export default function OperatorTicketCard({ ticket, reload }) {
           <option value="high">High</option>
         </select>
 
-        <button onClick={updateTicket}>
-          Save changes
+        <button className="save-btn" onClick={updateTicket}>
+          Save
         </button>
+
       </div>
 
       {/* ACTIONS */}
-      <div className="op-actions">
+      <div className="op-actions" onClick={(e) => e.stopPropagation()}>
 
         <button onClick={closeTicket}>
           Close
