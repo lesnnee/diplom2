@@ -22,11 +22,11 @@ export default function OperatorTicketCard({
   };
 
   const updateTicket = async () => {
-    await api.patch(`/tickets/${ticket._id}`, {
-      category,
-      priority,
-      assignedTo,
-    });
+    await api.patch(`/tickets/${ticket._id}/ml-correction`, {
+  category,
+  priority,
+  assignedTo,
+});
 
     reload();
   };

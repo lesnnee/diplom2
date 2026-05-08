@@ -21,6 +21,21 @@ const TicketSchema = new mongoose.Schema(
       default: "unknown",
     },
 
+    correction: {
+  category: String,
+  priority: Number,
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null
+  },
+  correctedAt: Date,
+  correctedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  }
+},
+
     priority: { type: Number, min: 1, max: 5, default: 3 },
 
     assignedTo: {

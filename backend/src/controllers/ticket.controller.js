@@ -222,21 +222,39 @@ export const updateStatus = async (req, res) => {
 export const mlCorrection = async (req, res) => {
   try {
     const { id } = req.params;
-    const { category, priority } = req.body;
+    const { category, priority, assignedTo } = req.body;
 
-    const ticket = await Ticket.findByIdAndUpdate(
-      id,
-      { category, priority },
-      { new: true }
-    );
+    const ticket = await Ticket.findById(id);
 
-    await axios.post("http://localhost:8000/feedback", {
-      description: ticket.description,
+    if (!ticket) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+
+    // 1. сохраняем correction (НЕ трогаем original поля)
+    ticket.correction = {
       category,
       priority,
+      assignedTo,
+      correctedAt: new Date(),
+      correctedBy: req.user._id,
+    };
+
+    await ticket.save();
+
+    // 2. отправляем в ML сервис (если он у тебя есть)
+    await axios.post("http://localhost:8000/feedback", {
+      description: ticket.description,
+      originalCategory: ticket.category,
+      correctedCategory: category,
+      priority,
+    }).catch(err => {
+      console.log("ML service error:", err.message);
     });
 
-    res.json({ message: "ML corrected", ticket });
+    res.json({
+      message: "ML correction saved",
+      ticket,
+    });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
