@@ -1,12 +1,4 @@
-import pickle
-import os
-import sys
-import json
 import numpy as np
-
-# =====================
-# КЛАСС ДОЛЖЕН БЫТЬ ТАКИМ ЖЕ, КАК ПРИ СОХРАНЕНИИ!
-# =====================
 
 class PostprocessingClassifier:
     def __init__(self, model):
@@ -77,70 +69,3 @@ class PostprocessingClassifier:
     
     def predict_proba(self, X):
         return self.model.predict_proba(X)
-
-# =====================
-# LOAD MODEL
-# =====================
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "ml_model_advanced.pkl")
-
-if not os.path.exists(MODEL_PATH):
-    MODEL_PATH = os.path.join(BASE_DIR, "ml_model.pkl")
-
-print(f"Loading model from: {MODEL_PATH}", file=sys.stderr)
-
-try:
-    with open(MODEL_PATH, "rb") as f:
-        model_data = pickle.load(f)
-        
-        if isinstance(model_data, dict) and 'model' in model_data:
-            model = model_data['model']
-        else:
-            model = model_data
-    
-    print("Model loaded successfully!", file=sys.stderr)
-    
-except Exception as e:
-    print(json.dumps({"error": f"Failed to load model: {str(e)}"}, ensure_ascii=False))
-    sys.exit(1)
-
-# =====================
-# PREDICT
-# =====================
-if len(sys.argv) < 2:
-    print(json.dumps({"error": "No text provided"}), ensure_ascii=False)
-    sys.exit(1)
-
-text = sys.argv[1]
-
-try:
-    prediction = model.predict([text])[0]
-    probabilities = model.predict_proba([text])[0]
-    classes = model.classes_
-    max_prob = max(probabilities)
-    
-    THRESHOLD = 0.90
-    
-    if max_prob < THRESHOLD:
-        final_prediction = "manual_review"
-        auto_approved = False
-    else:
-        final_prediction = prediction
-        auto_approved = True
-    
-    result = {
-        "text": text,
-        "category": final_prediction,
-        "confidence": round(float(max_prob), 4),
-        "auto_approved": auto_approved,
-        "probabilities": {
-            label: round(float(prob), 4)
-            for label, prob in zip(classes, probabilities)
-        }
-    }
-    
-    print(json.dumps(result, ensure_ascii=False))
-    
-except Exception as e:
-    print(json.dumps({"error": f"Prediction failed: {str(e)}"}), ensure_ascii=False)
-    sys.exit(1)

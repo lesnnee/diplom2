@@ -21,20 +21,36 @@ const TicketSchema = new mongoose.Schema(
       default: "unknown",
     },
 
+    // 🆕 ML Prediction Data (добавлено)
+    mlPrediction: {
+      predictedCategory: { type: String, default: null },
+      confidence: { type: Number, min: 0, max: 1, default: null },
+      autoApproved: { type: Boolean, default: false },
+      threshold: { type: Number, default: 0.9 },
+      predictedAt: { type: Date, default: null },
+      probabilities: {
+        type: Map,
+        of: Number,
+        default: {}
+      }
+    },
+
     correction: {
-  category: String,
-  priority: Number,
-  assignedTo: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    default: null
-  },
-  correctedAt: Date,
-  correctedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User"
-  }
-},
+      category: { type: String, default: null },
+      priority: { type: Number, min: 1, max: 5, default: null },
+      assignedTo: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null
+      },
+      correctedAt: { type: Date, default: null },
+      correctedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+      },
+      originalMlCategory: { type: String, default: null }, // 🆕 сохраняем что предлагала ML
+      reason: { type: String, default: null } // 🆕 причина коррекции
+    },
 
     priority: { type: Number, min: 1, max: 5, default: 3 },
 
@@ -77,5 +93,10 @@ const TicketSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// 🆕 Индексы для быстрого поиска
+TicketSchema.index({ "mlPrediction.autoApproved": 1 });
+TicketSchema.index({ "mlPrediction.confidence": -1 });
+TicketSchema.index({ "correction.correctedAt": 1 });
 
 export default mongoose.model("Ticket", TicketSchema);

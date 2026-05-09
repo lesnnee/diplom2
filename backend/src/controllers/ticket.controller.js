@@ -5,7 +5,7 @@ import { findBestSpecialist } from "../utils/smartRouting.js";
 
 
 // =======================================================
-// ML SERVICE CALL
+// ML SERVICE CALL (HTTP ONLY)
 // =======================================================
 async function mlClassifier(description) {
   try {
@@ -13,18 +13,25 @@ async function mlClassifier(description) {
       description,
     });
 
+    // ✅ Добавить логирование для отладки
+    console.log(`[ML] Category: ${res.data.category}, Confidence: ${res.data.confidence}`);
+    
     return res.data;
   } catch (err) {
     console.error("ML error:", err.message);
-
+    
+    // ✅ Логировать ошибку для мониторинга
+    // Можно отправить в Sentry или другой логгер
+    
     return {
       category: "unknown",
       priority: 3,
       confidence: 0,
+      auto_approved: false,  // ✅ добавить это поле
+      error: err.message
     };
   }
 }
-
 
 // =======================================================
 // 1. CREATE TICKET
@@ -36,6 +43,9 @@ export const createTicket = async (req, res) => {
 
     const ml = await mlClassifier(description);
 
+    const CONFIDENCE_THRESHOLD = 0.90;  // ✅ изменил с 0.85 на 0.90 (как в вашей модели)
+    const isConfident = ml.confidence >= CONFIDENCE_THRESHOLD;
+
     const categoryToRole = {
       software: "it_support",
       network: "network_admin",
@@ -45,7 +55,13 @@ export const createTicket = async (req, res) => {
       unknown: "operator",
     };
 
-    const specialistRole = categoryToRole[ml.category] || "operator";
+    let specialistRole;
+
+    if (!isConfident || ml.category === "unknown") {
+      specialistRole = "operator";
+    } else {
+      specialistRole = categoryToRole[ml.category] || "operator";
+    }
 
     const specialist = await findBestSpecialist(specialistRole);
     const assignedTo = specialist?._id || null;
@@ -61,6 +77,9 @@ export const createTicket = async (req, res) => {
       }));
     }
 
+    const routingMode = isConfident ? "auto" : "manual_review";
+    
+    // ✅ Сохраняем больше ML метаданных
     const ticket = await Ticket.create({
       userId,
       description,
@@ -68,14 +87,35 @@ export const createTicket = async (req, res) => {
       priority: ml.priority,
       assignedTo,
       attachments,
+      routingMode,
+      confidence: ml.confidence,
+      mlPrediction: {              // ✅ добавить это поле в схему
+        predictedCategory: ml.category,
+        confidence: ml.confidence,
+        autoApproved: isConfident,
+        threshold: CONFIDENCE_THRESHOLD,
+        predictedAt: new Date(),
+        probabilities: ml.probabilities || {}
+      }
     });
+
+    // ✅ Логируем результат
+    console.log(`[Ticket] Created #${ticket._id}, ML: ${ml.category} (${ml.confidence}), Route: ${routingMode}, Assigned: ${specialistRole}`);
 
     res.status(201).json({
       message: "Ticket created",
-      ticket,
+      ticket: {
+        id: ticket._id,
+        category: ticket.category,
+        priority: ticket.priority,
+        routingMode: ticket.routingMode,
+        confidence: ticket.confidence,
+        assignedTo: specialist?.fullName || null
+      },
     });
 
   } catch (err) {
+    console.error("Create ticket error:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -153,7 +193,7 @@ export const getTicketsByCategory = async (req, res) => {
 
 
 // =======================================================
-// 5. UPDATE STATUS (🔥 FIXED)
+// 5. UPDATE STATUS
 // =======================================================
 export const updateStatus = async (req, res) => {
   try {
@@ -183,9 +223,6 @@ export const updateStatus = async (req, res) => {
 
     const oldStatus = ticket.status;
 
-    // ======================
-    // HISTORY
-    // ======================
     ticket.history.push({
       action: "status_change",
       oldValue: oldStatus,
@@ -193,9 +230,6 @@ export const updateStatus = async (req, res) => {
       changedBy: req.user.userId,
     });
 
-    // ======================
-    // CLOSED AT LOGIC
-    // ======================
     if (status === "done") {
       ticket.closedAt = new Date();
     }
@@ -230,7 +264,6 @@ export const mlCorrection = async (req, res) => {
       return res.status(404).json({ message: "Ticket not found" });
     }
 
-    // 1. сохраняем correction (НЕ трогаем original поля)
     ticket.correction = {
       category,
       priority,
@@ -241,8 +274,7 @@ export const mlCorrection = async (req, res) => {
 
     await ticket.save();
 
-    // 2. отправляем в ML сервис (если он у тебя есть)
-    await axios.post("http://localhost:8000/feedback", {
+    axios.post("http://localhost:8000/feedback", {
       description: ticket.description,
       originalCategory: ticket.category,
       correctedCategory: category,
@@ -285,7 +317,7 @@ export const assignTicket = async (req, res) => {
 
 
 // =======================================================
-// 8. ADD COMMENT (FIXED SAFE CHECK)
+// 8. ADD COMMENT
 // =======================================================
 export const addComment = async (req, res) => {
   try {
@@ -327,10 +359,12 @@ export const addComment = async (req, res) => {
 
 
 // =======================================================
-// 9. CLOSE TICKET
+// 9. CLOSE TICKET (FIXED)
 // =======================================================
 export const closeTicket = async (req, res) => {
   try {
+    const { id } = req.params;
+
     const ticket = await Ticket.findById(id);
 
     ticket.status = "done";
@@ -450,6 +484,7 @@ export const getKnowledgeTickets = async (req, res) => {
   }
 };
 
+
 // =======================================================
 // LOGS
 // =======================================================
@@ -477,9 +512,12 @@ export const getLogs = async (req, res) => {
   }
 };
 
+
+// =======================================================
+// ALL KNOWLEDGE
+// =======================================================
 export const getAllKnowledgeTickets = async (req, res) => {
   try {
-
     const tickets = await Ticket.find({
       status: "done",
     })
