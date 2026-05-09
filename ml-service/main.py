@@ -10,32 +10,46 @@ app = FastAPI()
 # ПУТИ К ФАЙЛАМ
 # =====================
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "ml_model_simple.pkl")  # используем простую модель
+
+# Модель категорий (простая, конвертированная)
+CATEGORY_MODEL_PATH = os.path.join(BASE_DIR, "ml_model_simple.pkl")
+
+# Модель приоритетов (уже Pipeline)
+PRIORITY_MODEL_PATH = os.path.join(BASE_DIR, "ml_model_priority.pkl")
+
 FEEDBACK_PATH = os.path.join(BASE_DIR, "backend", "feedback_dataset.csv")
 
 AUTO_TRAIN_THRESHOLD = 10
 new_data_counter = 0
 
 # =====================
-# ЗАГРУЗКА МОДЕЛИ
+# ЗАГРУЗКА МОДЕЛЕЙ
 # =====================
-def load_model():
-    if not os.path.exists(MODEL_PATH):
-        print(f"⚠️ Model not found at {MODEL_PATH}")
-        return None
+category_model = None
+priority_model = None
+
+def load_models():
+    global category_model, priority_model
     
-    with open(MODEL_PATH, "rb") as f:
-        model = pickle.load(f)
-        return model
+    # Загрузка модели категорий
+    if os.path.exists(CATEGORY_MODEL_PATH):
+        with open(CATEGORY_MODEL_PATH, "rb") as f:
+            category_model = pickle.load(f)
+        print(f"✅ Category model loaded from {CATEGORY_MODEL_PATH}")
+        if hasattr(category_model, 'classes_'):
+            print(f"   Classes: {category_model.classes_}")
+    else:
+        print(f"⚠️ Category model not found at {CATEGORY_MODEL_PATH}")
+    
+    # Загрузка модели приоритетов
+    if os.path.exists(PRIORITY_MODEL_PATH):
+        with open(PRIORITY_MODEL_PATH, "rb") as f:
+            priority_model = pickle.load(f)
+        print(f"✅ Priority model loaded from {PRIORITY_MODEL_PATH}")
+    else:
+        print(f"⚠️ Priority model not found at {PRIORITY_MODEL_PATH}")
 
-
-model = load_model()
-if model:
-    print(f"✅ Model loaded successfully from {MODEL_PATH}")
-    if hasattr(model, 'classes_'):
-        print(f"   Classes: {model.classes_}")
-else:
-    print("❌ Failed to load model")
+load_models()
 
 
 # =========================
@@ -52,60 +66,76 @@ class TrainInput(BaseModel):
 
 
 # =========================
-# PREDICT
+# PREDICT (с поддержкой priority модели)
 # =========================
 @app.post("/predict")
 def predict(data: TicketInput):
-    global model
+    global category_model, priority_model
 
-    if model is None:
+    if category_model is None:
         return {
             "category": "unknown",
             "priority": 3,
-            "confidence": 0.0,
-            "error": "model_not_loaded"
+            "confidence_category": 0.0,
+            "confidence_priority": 0.0,
+            "error": "category_model_not_loaded"
         }
 
     try:
-        category = model.predict([data.description])[0]
+        # 1. ПРЕДСКАЗАНИЕ КАТЕГОРИИ
+        category = category_model.predict([data.description])[0]
         
-        confidence = 0.0
-        if hasattr(model, "predict_proba"):
-            proba = model.predict_proba([data.description])[0]
-            confidence = float(max(proba))
+        confidence_category = 0.0
+        category_probabilities = {}
+        
+        if hasattr(category_model, "predict_proba"):
+            proba = category_model.predict_proba([data.description])[0]
+            confidence_category = float(max(proba))
+            category_probabilities = {
+                label: float(prob) for label, prob in zip(category_model.classes_, proba)
+            }
         
         THRESHOLD = 0.90
-        auto_approved = confidence >= THRESHOLD
+        auto_approved = confidence_category >= THRESHOLD
         
-        if not auto_approved:
-            category = "manual_review"
+        final_category = category if auto_approved else "manual_review"
         
-        # Эвристика приоритета
-        priority = 2
-        text = data.description.lower()
-
-        if any(w in text for w in ["urgent", "critical", "down", "срочно", "критично", "лежит"]):
-            priority = 5
-        elif any(w in text for w in ["slow", "error", "problem", "медленно", "ошибка", "не работает"]):
-            priority = 3
-        else:
-            priority = 2
-
+        # 2. ПРЕДСКАЗАНИЕ ПРИОРИТЕТА
+        priority = 3  # default
+        confidence_priority = 0.0
+        priority_probabilities = {}
+        
+        if priority_model is not None:
+            try:
+                priority = int(priority_model.predict([data.description])[0])
+                
+                if hasattr(priority_model, "predict_proba"):
+                    proba = priority_model.predict_proba([data.description])[0]
+                    confidence_priority = float(max(proba))
+                    priority_probabilities = {
+                        f"p{i}": float(prob) for i, prob in enumerate(proba, 1)
+                    }
+            except Exception as e:
+                print(f"⚠️ Priority prediction failed: {e}")
+        
         return {
-            "category": category,
+            "category": final_category,
             "priority": priority,
-            "confidence": confidence,
+            "confidence_category": confidence_category,
+            "confidence_priority": confidence_priority,
             "auto_approved": auto_approved,
-            "threshold": THRESHOLD
+            "threshold": THRESHOLD,
+            "category_probabilities": category_probabilities,
+            "priority_probabilities": priority_probabilities
         }
     
     except Exception as e:
         return {
-            "category": category,
-            "priority": priority,
-            "confidence": confidence,        # ← добавить
-            "auto_approved": auto_approved,  # ← добавить
-            "threshold": THRESHOLD
+            "category": "error",
+            "priority": 3,
+            "confidence_category": 0.0,
+            "confidence_priority": 0.0,
+            "error": str(e)
         }
 
 
@@ -150,8 +180,10 @@ def feedback(data: TrainInput):
 def health():
     return {
         "status": "ok",
-        "model_loaded": model is not None,
-        "model_path": MODEL_PATH,
+        "category_model_loaded": category_model is not None,
+        "priority_model_loaded": priority_model is not None,
+        "category_model_path": CATEGORY_MODEL_PATH,
+        "priority_model_path": PRIORITY_MODEL_PATH,
         "feedback_file": FEEDBACK_PATH
     }
 

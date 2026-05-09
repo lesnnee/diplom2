@@ -13,21 +13,18 @@ async function mlClassifier(description) {
       description,
     });
 
-    // ✅ Добавить логирование для отладки
-    console.log(`[ML] Category: ${res.data.category}, Confidence: ${res.data.confidence}`);
+    console.log(`[ML] Category: ${res.data.category} (${res.data.confidence_category?.toFixed(2) || 'N/A'}), Priority: ${res.data.priority} (${res.data.confidence_priority?.toFixed(2) || 'N/A'})`);
     
     return res.data;
   } catch (err) {
     console.error("ML error:", err.message);
     
-    // ✅ Логировать ошибку для мониторинга
-    // Можно отправить в Sentry или другой логгер
-    
     return {
       category: "unknown",
       priority: 3,
-      confidence: 0,
-      auto_approved: false,  // ✅ добавить это поле
+      confidence_category: 0,
+      confidence_priority: 0,
+      auto_approved: false,
       error: err.message
     };
   }
@@ -43,8 +40,9 @@ export const createTicket = async (req, res) => {
 
     const ml = await mlClassifier(description);
 
-    const CONFIDENCE_THRESHOLD = 0.90;  // ✅ изменил с 0.85 на 0.90 (как в вашей модели)
-    const isConfident = ml.confidence >= CONFIDENCE_THRESHOLD;
+    const CONFIDENCE_THRESHOLD = 0.90;
+    // Используем confidence_category для порога категории
+    const isConfident = (ml.confidence_category || 0) >= CONFIDENCE_THRESHOLD;
 
     const categoryToRole = {
       software: "it_support",
@@ -53,11 +51,12 @@ export const createTicket = async (req, res) => {
       security: "security",
       hardware: "hardware_support",
       unknown: "operator",
+      manual_review: "operator"
     };
 
     let specialistRole;
 
-    if (!isConfident || ml.category === "unknown") {
+    if (!isConfident || ml.category === "unknown" || ml.category === "manual_review") {
       specialistRole = "operator";
     } else {
       specialistRole = categoryToRole[ml.category] || "operator";
@@ -79,7 +78,6 @@ export const createTicket = async (req, res) => {
 
     const routingMode = isConfident ? "auto" : "manual_review";
     
-    // ✅ Сохраняем больше ML метаданных
     const ticket = await Ticket.create({
       userId,
       description,
@@ -88,19 +86,24 @@ export const createTicket = async (req, res) => {
       assignedTo,
       attachments,
       routingMode,
-      confidence: ml.confidence,
-      mlPrediction: {              // ✅ добавить это поле в схему
+      confidence: ml.confidence_category || 0,
+      mlPrediction: {
         predictedCategory: ml.category,
-        confidence: ml.confidence,
+        confidence: ml.confidence_category || 0,
         autoApproved: isConfident,
         threshold: CONFIDENCE_THRESHOLD,
         predictedAt: new Date(),
-        probabilities: ml.probabilities || {}
+        probabilities: ml.category_probabilities || {},
+        // Дополнительные поля для приоритета
+        priorityPrediction: {
+          value: ml.priority,
+          confidence: ml.confidence_priority || 0,
+          probabilities: ml.priority_probabilities || {}
+        }
       }
     });
 
-    // ✅ Логируем результат
-    console.log(`[Ticket] Created #${ticket._id}, ML: ${ml.category} (${ml.confidence}), Route: ${routingMode}, Assigned: ${specialistRole}`);
+    console.log(`[Ticket] Created #${ticket._id}, Category: ${ml.category} (${(ml.confidence_category || 0).toFixed(2)}), Priority: ${ml.priority} (${(ml.confidence_priority || 0).toFixed(2)}), Route: ${routingMode}, Assigned: ${specialistRole}`);
 
     res.status(201).json({
       message: "Ticket created",
@@ -110,6 +113,7 @@ export const createTicket = async (req, res) => {
         priority: ticket.priority,
         routingMode: ticket.routingMode,
         confidence: ticket.confidence,
+        autoApproved: isConfident,
         assignedTo: specialist?.fullName || null
       },
     });
