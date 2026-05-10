@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema(
 
     password: { type: String, required: true },
 
-    // 🔥 теперь роли НЕ фиксированные
+    // 🔥 роли специалистов
     role: {
       type: String,
       default: "user",
@@ -30,12 +30,20 @@ const userSchema = new mongoose.Schema(
 
     preferences: { type: Object },
 
-    // 🧠 метрики (можно кешировать или считать динамически)
+    // 🧠 СЧЁТЧИК АКТИВНЫХ ТИКЕТОВ (для балансировки нагрузки)
     activeTickets: {
       type: Number,
       default: 0,
     },
 
+    // 🧠 МАССИВ ID НАЗНАЧЕННЫХ ТИКЕТОВ (альтернативный способ)
+    assignedTickets: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "Ticket",
+      default: [],
+    },
+
+    // 📊 МЕТРИКИ ДЛЯ SCORE
     resolvedTickets: {
       type: Number,
       default: 0,
@@ -53,6 +61,10 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// 🧠 ИНДЕКСЫ ДЛЯ БЫСТРОГО ПОИСКА
+userSchema.index({ role: 1, isActive: 1 });
+userSchema.index({ activeTickets: 1 });
 
 const User = mongoose.model("User", userSchema);
 export default User;

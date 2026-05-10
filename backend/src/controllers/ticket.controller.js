@@ -1,6 +1,7 @@
 import axios from "axios";
 import mongoose from "mongoose";
 import Ticket from "../models/Ticket.js";
+import User from "../models/User.js";
 import { findBestSpecialist } from "../utils/smartRouting.js";
 
 
@@ -31,7 +32,7 @@ async function mlClassifier(description) {
 }
 
 // =======================================================
-// 1. CREATE TICKET
+// 1. CREATE TICKET (с обновлением счётчиков специалиста)
 // =======================================================
 export const createTicket = async (req, res) => {
   try {
@@ -41,7 +42,6 @@ export const createTicket = async (req, res) => {
     const ml = await mlClassifier(description);
 
     const CONFIDENCE_THRESHOLD = 0.90;
-    // Используем confidence_category для порога категории
     const isConfident = (ml.confidence_category || 0) >= CONFIDENCE_THRESHOLD;
 
     const categoryToRole = {
@@ -78,6 +78,7 @@ export const createTicket = async (req, res) => {
 
     const routingMode = isConfident ? "auto" : "manual_review";
     
+    // ✅ СНАЧАЛА создаём тикет
     const ticket = await Ticket.create({
       userId,
       description,
@@ -94,7 +95,6 @@ export const createTicket = async (req, res) => {
         threshold: CONFIDENCE_THRESHOLD,
         predictedAt: new Date(),
         probabilities: ml.category_probabilities || {},
-        // Дополнительные поля для приоритета
         priorityPrediction: {
           value: ml.priority,
           confidence: ml.confidence_priority || 0,
@@ -102,6 +102,14 @@ export const createTicket = async (req, res) => {
         }
       }
     });
+
+    // ✅ ПОТОМ обновляем счётчики специалиста (используя созданный ticket._id)
+    if (assignedTo && specialistRole !== "operator") {
+      await User.findByIdAndUpdate(assignedTo, {
+        $inc: { activeTickets: 1 },
+        $push: { assignedTickets: ticket._id }
+      });
+    }
 
     console.log(`[Ticket] Created #${ticket._id}, Category: ${ml.category} (${(ml.confidence_category || 0).toFixed(2)}), Priority: ${ml.priority} (${(ml.confidence_priority || 0).toFixed(2)}), Route: ${routingMode}, Assigned: ${specialistRole}`);
 
@@ -114,7 +122,7 @@ export const createTicket = async (req, res) => {
         routingMode: ticket.routingMode,
         confidence: ticket.confidence,
         autoApproved: isConfident,
-        assignedTo: specialist?.fullName || null
+        assignedTo: specialist?.name || null
       },
     });
 
@@ -197,7 +205,7 @@ export const getTicketsByCategory = async (req, res) => {
 
 
 // =======================================================
-// 5. UPDATE STATUS
+// 5. UPDATE STATUS (с обновлением счётчиков при закрытии)
 // =======================================================
 export const updateStatus = async (req, res) => {
   try {
@@ -226,6 +234,22 @@ export const updateStatus = async (req, res) => {
     }
 
     const oldStatus = ticket.status;
+
+    // ✅ Если тикет закрывается (done) - уменьшаем счётчики специалиста
+    if (status === "done" && ticket.assignedTo && oldStatus !== "done") {
+      await User.findByIdAndUpdate(ticket.assignedTo, {
+        $inc: { activeTickets: -1 },
+        $pull: { assignedTickets: ticket._id }
+      });
+    }
+
+    // ✅ Если тикет возвращается в работу (in_progress) и был закрыт
+    if (status === "in_progress" && oldStatus === "done" && ticket.assignedTo) {
+      await User.findByIdAndUpdate(ticket.assignedTo, {
+        $inc: { activeTickets: 1 },
+        $push: { assignedTickets: ticket._id }
+      });
+    }
 
     ticket.history.push({
       action: "status_change",
