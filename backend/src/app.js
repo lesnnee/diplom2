@@ -15,6 +15,7 @@ import operatorRoutes from "./routes/operator.routes.js";
 import settingsRoutes from "./routes/settings.routes.js";
 import statsRoutes from "./routes/statistics.routes.js";
 import ticketRoutes from "./routes/ticket.routes.js";
+import userRoutes from "./routes/user.routes.js";
 
 dotenv.config({ path: "../.env" });
 
@@ -54,6 +55,7 @@ app.use("/api/admin/settings", settingsRoutes);
 app.use("/api/admin/logs", logsRoutes);
 app.use("/api/admin/statistics", statsRoutes);
 app.use("/api/articles", articleRoutes);
+app.use("/api/users", userRoutes);
 
 /* =========================
    ERROR HANDLER

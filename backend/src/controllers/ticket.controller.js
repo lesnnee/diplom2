@@ -139,6 +139,7 @@ export const createTicket = async (req, res) => {
 export const getMyTickets = async (req, res) => {
   try {
     const tickets = await Ticket.find({ userId: req.user.userId })
+    .populate("assignedTo", "name")
       .sort({ createdAt: -1 });
 
     res.json(tickets);
@@ -163,6 +164,7 @@ export const getAllTickets = async (req, res) => {
 
     const tickets = await Ticket.find(filters)
       .populate("userId", "name email")
+      .populate("assignedTo", "name")
       .sort({ createdAt: -1 });
 
     res.json(tickets);
@@ -194,6 +196,7 @@ export const getTicketsByCategory = async (req, res) => {
     }
 
     const tickets = await Ticket.find({ category })
+    .populate("assignedTo", "name")
       .sort({ createdAt: -1 });
 
     res.json(tickets);
@@ -279,12 +282,14 @@ export const updateStatus = async (req, res) => {
 
 
 // =======================================================
-// 6. ML CORRECTION
+// 6. ML CORRECTION (feedback loop)
 // =======================================================
 export const mlCorrection = async (req, res) => {
   try {
     const { id } = req.params;
     const { category, priority, assignedTo } = req.body;
+
+    console.log("📝 Updating ticket:", id, { category, priority, assignedTo });
 
     const ticket = await Ticket.findById(id);
 
@@ -292,35 +297,70 @@ export const mlCorrection = async (req, res) => {
       return res.status(404).json({ message: "Ticket not found" });
     }
 
+    // Сохраняем старые значения для feedback
+    const oldCategory = ticket.category;
+    const oldPriority = ticket.priority;
+    const oldConfidence = ticket.mlPrediction?.confidence || 0;
+    const priorityConfidence = ticket.mlPrediction?.priorityPrediction?.confidence || 0;
+
+    // ✅ Исправление: преобразуем пустую строку в null
+    const finalAssignedTo = assignedTo && assignedTo !== "" ? assignedTo : null;
+
+    // Обновляем основные поля
+    if (category) ticket.category = category;
+    if (priority) ticket.priority = priority;
+    if (finalAssignedTo !== null) ticket.assignedTo = finalAssignedTo;
+
+    // Сохраняем коррекцию
     ticket.correction = {
       category,
       priority,
-      assignedTo,
+      assignedTo: finalAssignedTo,  // ✅ теперь null, а не ""
       correctedAt: new Date(),
-      correctedBy: req.user._id,
+      correctedBy: req.user?._id || req.user?.userId,
+      originalMlCategory: oldCategory,
+      originalMlPriority: oldPriority
     };
 
     await ticket.save();
 
-    axios.post("http://localhost:8000/feedback", {
-      description: ticket.description,
-      originalCategory: ticket.category,
-      correctedCategory: category,
-      priority,
-    }).catch(err => {
-      console.log("ML service error:", err.message);
-    });
+    // Отправляем feedback в ML сервис (асинхронно)
+    const feedbackPromises = [];
+
+    if (category && category !== oldCategory) {
+      feedbackPromises.push(
+        axios.post("http://localhost:8000/feedback/category", {
+          description: ticket.description,
+          original_category: oldCategory,
+          corrected_category: category,
+          confidence: oldConfidence
+        }).catch(err => console.log("ML category feedback error:", err.message))
+      );
+    }
+
+    if (priority && priority !== oldPriority) {
+      feedbackPromises.push(
+        axios.post("http://localhost:8000/feedback/priority", {
+          description: ticket.description,
+          original_priority: oldPriority,
+          corrected_priority: priority,
+          confidence: priorityConfidence
+        }).catch(err => console.log("ML priority feedback error:", err.message))
+      );
+    }
+
+    Promise.all(feedbackPromises);
 
     res.json({
-      message: "ML correction saved",
+      message: "ML correction saved, feedback sent to ML service",
       ticket,
     });
 
   } catch (err) {
+    console.error("ML correction error:", err);
     res.status(500).json({ error: err.message });
   }
 };
-
 
 // =======================================================
 // 7. ASSIGN
@@ -334,7 +374,7 @@ export const assignTicket = async (req, res) => {
       id,
       { assignedTo },
       { new: true }
-    );
+    ).populate("assignedTo", "name");
 
     res.json({ message: "Ticket assigned", ticket });
 
@@ -472,6 +512,7 @@ export const getAssignedTickets = async (req, res) => {
       assignedTo: new mongoose.Types.ObjectId(req.user.userId),
     })
       .populate("userId", "name email")
+      .populate("assignedTo", "name")
       .sort({ createdAt: -1 });
 
     res.json(tickets);

@@ -1,0 +1,9 @@
+[
+  {
+    "description": "балансировщик нагрузки отдаёт 502 ошибку",
+    "original_priority": 5,
+    "corrected_priority": 3,
+    "confidence": 0.0,
+    "timestamp": "2026-05-10T17:30:13.735629"
+  }
+]

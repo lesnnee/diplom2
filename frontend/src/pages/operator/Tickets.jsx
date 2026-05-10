@@ -63,6 +63,34 @@ export default function Tickets() {
     return text.includes(search.toLowerCase());
   });
 
+  // ================= КАТЕГОРИИ =================
+  const categories = [
+    "network",
+    "software", 
+    "hardware",
+    "security",
+    "infrastructure",
+    "manual_review"
+  ];
+
+  // ================= ПРИОРИТЕТЫ =================
+  const priorities = [
+    { value: "1", label: "P1 - Critical (бизнес остановлен)" },
+    { value: "2", label: "P2 - High (работа сильно затруднена)" },
+    { value: "3", label: "P3 - Medium (работа возможна с трудностями)" },
+    { value: "4", label: "P4 - Low (незначительная проблема)" },
+    { value: "5", label: "P5 - Info (вопрос/консультация)" }
+  ];
+
+  // ================= СТАТУСЫ =================
+  const statuses = [
+    { value: "new", label: "New" },
+    { value: "in_progress", label: "In progress" },
+    { value: "waiting_user", label: "Waiting user" },
+    { value: "done", label: "Done" },
+    { value: "rejected", label: "Rejected" }
+  ];
+
   return (
     <div className="tickets-page glass">
 
@@ -96,35 +124,34 @@ export default function Tickets() {
       {/* ================= FILTERS ================= */}
       <div className="filters-bar">
 
-        <select onChange={(e) => setStatus(e.target.value)}>
+        <select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">All status</option>
-          <option value="open">Open</option>
-          <option value="in_progress">In progress</option>
-          <option value="done">Done</option>
+          {statuses.map(s => (
+            <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
         </select>
 
-        <select onChange={(e) => setCategory(e.target.value)}>
+        <select value={category} onChange={(e) => setCategory(e.target.value)}>
           <option value="">All categories</option>
-          <option value="network">Network</option>
-          <option value="software">Software</option>
-          <option value="hardware">Hardware</option>
-          <option value="security">Security</option>
+          {categories.map(cat => (
+            <option key={cat} value={cat}>
+              {cat === "manual_review" ? "Manual review" : cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </option>
+          ))}
         </select>
 
-        <select onChange={(e) => setPriority(e.target.value)}>
-          <option value="">All priority</option>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
+        <select value={priority} onChange={(e) => setPriority(e.target.value)}>
+          <option value="">All priorities</option>
+          {priorities.map(p => (
+            <option key={p.value} value={p.value}>{p.label}</option>
+          ))}
         </select>
 
         <label className="checkbox">
           <input
             type="checkbox"
             checked={lowConfidenceOnly}
-            onChange={(e) =>
-              setLowConfidenceOnly(e.target.checked)
-            }
+            onChange={(e) => setLowConfidenceOnly(e.target.checked)}
           />
           Low AI confidence
         </label>

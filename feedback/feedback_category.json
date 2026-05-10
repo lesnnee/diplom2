@@ -1,0 +1,9 @@
+[
+  {
+    "description": "балансировщик нагрузки отдаёт 502 ошибку",
+    "original_category": "manual_review",
+    "corrected_category": "infrastructure",
+    "confidence": 0.7289801181125881,
+    "timestamp": "2026-05-10T17:30:13.734628"
+  }
+]
