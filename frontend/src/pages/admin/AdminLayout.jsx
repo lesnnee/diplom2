@@ -8,25 +8,25 @@ export default function AdminLayout() {
       <aside className="sidebar glass">
 
         <div className="logo">
-          ⚙️ Admin Panel
+          Панель Администратора
         </div>
 
         <nav className="nav">
 
           <NavLink to="/admin" end>
-            🏠 Dashboard
+            Главная
           </NavLink>
 
           <NavLink to="/admin/users">
-            👥 Users
+            Пользователи
           </NavLink>
 
           <NavLink to="/admin/settings">
-            ⚙️ System Settings
+            Настройки системы
           </NavLink>
 
           <NavLink to="/admin/stats">
-            📈 Statistics
+            Статистика
           </NavLink>
 
 
@@ -40,7 +40,7 @@ export default function AdminLayout() {
               window.location.href = "/";
             }}
           >
-            🚪 Logout
+            Выйти
           </button>
         </div>
 

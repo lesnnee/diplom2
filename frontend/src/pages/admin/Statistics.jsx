@@ -50,27 +50,27 @@ export default function Statistics() {
   return (
     <div className="stats-page">
 
-      <h1>System Statistics</h1>
+      <h1>Статитстика</h1>
 
       {/* TOP CARDS */}
       <div className="stats-grid">
         <div className="glass card">
-          <h3>Users</h3>
+          <h3>Пользователи</h3>
           <p className="big">{data.users}</p>
         </div>
 
         <div className="glass card">
-          <h3>Tickets</h3>
+          <h3>Обращения</h3>
           <p className="big">{data.tickets}</p>
         </div>
 
         <div className="glass card">
-          <h3>Open</h3>
+          <h3>Открытые обращения</h3>
           <p className="big">{data.open}</p>
         </div>
 
         <div className="glass card">
-          <h3>Closed</h3>
+          <h3>Закрытые обращения</h3>
           <p className="big">{data.closed}</p>
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function Statistics() {
 
         {/* 1 */}
         <div className="chart-slide glass card">
-          <h2>Tickets Over Time</h2>
+          <h2>Динамика обращений</h2>
 
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data.timeline}>
@@ -110,7 +110,7 @@ export default function Statistics() {
 
         {/* 2 */}
         <div className="chart-slide glass card">
-          <h2>Categories</h2>
+          <h2>Категории</h2>
 
 <ResponsiveContainer width="100%" height={300}>
   <PieChart>
@@ -140,7 +140,7 @@ export default function Statistics() {
 
         {/* 3 (заглушка под будущее) */}
 <div className="glass card chart">
-  <h2>Specialists Performance (7 days)</h2>
+  <h2>Эффективность специалистов(недельная)</h2>
 
   <ResponsiveContainer width="100%" height={300}>
     <BarChart data={data.specialistStats}>
@@ -175,7 +175,7 @@ export default function Statistics() {
 
         {/* 4 */}
           <div className="chart-slide glass card">
-    <h2>SLA Resolution Time</h2>
+    <h2>Время решения обращений</h2>
 
     <ResponsiveContainer width="100%" height={300}>
       <PieChart>
@@ -211,7 +211,7 @@ export default function Statistics() {
 
         {/* 5 */}
   <div className="chart-slide glass card">
-    <h2>Overload / Capacity</h2>
+    <h2>Нагруженность специалистов</h2>
 
     <ResponsiveContainer width="100%" height={400}>
       <BarChart

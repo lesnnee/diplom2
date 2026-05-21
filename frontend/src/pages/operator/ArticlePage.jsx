@@ -43,7 +43,7 @@ export default function ArticlePage() {
         className="back-btn"
         onClick={() => navigate(-1)}
       >
-        ← Back
+        ← Назад
       </button>
 
       <div className="article-container glass">

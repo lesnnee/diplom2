@@ -53,14 +53,14 @@ const handleRegister = async (e) => {
   return (
     <div className="page">
       <form className="liquid" onSubmit={handleRegister}>
-        <h2 className="title">SIGN UP</h2>
+        <h2 className="title">РЕГИСТРАЦИЯ</h2>
 
         {error && <div className="error">{error}</div>}
 
         <input
           className="input"
           name="name"
-          placeholder="Name"
+          placeholder="Имя"
           value={form.name}
           onChange={handleChange}
         />
@@ -77,7 +77,7 @@ const handleRegister = async (e) => {
           className="input"
           name="password"
           type="password"
-          placeholder="Password"
+          placeholder="Пароль"
           value={form.password}
           onChange={handleChange}
         />
@@ -85,20 +85,20 @@ const handleRegister = async (e) => {
         <input
           className="input"
           name="company"
-          placeholder="Company"
+          placeholder="Компания"
           value={form.company}
           onChange={handleChange}
         />
 
         <button className="button" type="submit">
-          CREATE ACCOUNT
+          ЗАРЕГИСТРИРОВАТЬСЯ
         </button>
 
         <div
           className="link"
           onClick={() => navigate("/")}
         >
-          Already have account? Sign in
+          Уже есть аккаунт? Войдите
         </div>
       </form>
     </div>

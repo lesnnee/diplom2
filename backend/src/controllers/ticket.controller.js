@@ -78,7 +78,6 @@ export const createTicket = async (req, res) => {
 
     const routingMode = isConfident ? "auto" : "manual_review";
     
-    // ✅ СНАЧАЛА создаём тикет
     const ticket = await Ticket.create({
       userId,
       description,
@@ -89,7 +88,7 @@ export const createTicket = async (req, res) => {
       routingMode,
       confidence: ml.confidence_category || 0,
       mlPrediction: {
-        predictedCategory: ml.category,
+        predictedCategory: ml.predicted_category || ml.category,  // ← ГЛАВНОЕ ИЗМЕНЕНИЕ
         confidence: ml.confidence_category || 0,
         autoApproved: isConfident,
         threshold: CONFIDENCE_THRESHOLD,
@@ -103,7 +102,6 @@ export const createTicket = async (req, res) => {
       }
     });
 
-    // ✅ ПОТОМ обновляем счётчики специалиста (используя созданный ticket._id)
     if (assignedTo && specialistRole !== "operator") {
       await User.findByIdAndUpdate(assignedTo, {
         $inc: { activeTickets: 1 },

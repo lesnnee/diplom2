@@ -148,7 +148,7 @@ navigate("/specialist/tickets");
       <div className="ticket-left glass">
 
         <button className="back-btn glass-btn" onClick={() => navigate(-1)}>
-          ← Back
+          ← Назад
         </button>
 
         <h1 className="ticket-title">{ticket.title}</h1>
@@ -158,19 +158,19 @@ navigate("/specialist/tickets");
         <div className="ticket-meta">
 
           <div>
-            <span className="label">Status:</span>
+            <span className="label">Статус:</span>
             <span className={`badge ${ticket.status}`}>
               {ticket.status}
             </span>
           </div>
 
           <div>
-            <span className="label">Category:</span>
+            <span className="label">Категория:</span>
             <span className="badge soft">{ticket.category}</span>
           </div>
 
           <div>
-            <span className="label">Priority:</span>
+            <span className="label">Приоритет:</span>
             <span className="badge">{ticket.priority}</span>
           </div>
 
@@ -180,14 +180,14 @@ navigate("/specialist/tickets");
 
           {isCreator ? (
             <div>
-              <span className="label">Assigned:</span>
+              <span className="label">Ответственный специалист:</span>
               <span className="badge soft">
                 {ticket.assignedTo?.name || "unassigned"}
               </span>
             </div>
           ) : (
             <div>
-              <span className="label">Author:</span>
+              <span className="label">Автор:</span>
               <span className="badge soft">
                 {ticket.userId?.name || "unknown"}
               </span>
@@ -235,11 +235,11 @@ navigate("/specialist/tickets");
       {/* RIGHT */}
       <div className="ticket-right glass">
 
-        <h3>Comments</h3>
+        <h3>Комментарии</h3>
 
         <div className="comments-list">
           {ticket.comments?.length === 0 && (
-            <p className="muted">No comments yet</p>
+            <p className="muted">Пока нет комментариев</p>
           )}
 
           {ticket.comments?.map((c, i) => {
@@ -267,7 +267,7 @@ navigate("/specialist/tickets");
     value={message}
     onChange={(e) => setMessage(e.target.value)}
     onKeyDown={handleKeyDown}
-    placeholder={isClosed ? "Ticket is closed" : "Write comment..."}
+    placeholder={isClosed ? "Обращение закрыто" : "Написать комментарий..."}
     disabled={isClosed}
     className={isClosed ? "disabled-input" : ""}
   />
@@ -277,7 +277,7 @@ navigate("/specialist/tickets");
     disabled={isClosed || !message.trim()}
     className={isClosed ? "disabled-btn" : ""}
   >
-    Send
+    Отправить
   </button>
 
 </div>
@@ -289,11 +289,11 @@ navigate("/specialist/tickets");
   <>
     {ticket.status !== "done" ? (
       <button className="close-btn" onClick={closeTicket}>
-        Close Ticket
+        Закрыть обращение
       </button>
     ) : (
       <button className="close-btn reopen" onClick={reopenTicket}>
-        Reopen Ticket
+        Открыть обращение
       </button>
     )}
   </>

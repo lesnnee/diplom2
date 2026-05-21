@@ -51,7 +51,7 @@ else {
   return (
     <div className="page">
       <form className="liquid" onSubmit={handleLogin}>
-        <h2 className="title">SIGN IN</h2>
+        <h2 className="title">ВХОД</h2>
 
         {error && <div className="error">{error}</div>}
 
@@ -65,20 +65,20 @@ else {
         <input
           className="input"
           type="password"
-          placeholder="Password"
+          placeholder="Пароль"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
         <button className="button" type="submit">
-          LOGIN
+          ВОЙТИ
         </button>
 
         <div
           className="link"
           onClick={() => navigate("/register")}
         >
-          Create account
+          Создать аккаунт
         </div>
       </form>
     </div>

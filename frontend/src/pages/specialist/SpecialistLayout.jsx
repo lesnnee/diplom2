@@ -8,21 +8,21 @@ export default function SpecialistLayout() {
       <aside className="sidebar glass">
 
         <div className="logo">
-          🛠 Specialist Panel
+          Панель специалиста
         </div>
 
         <nav className="nav">
 
           <NavLink to="/specialist" end>
-            🏠 Dashboard
+            Главная
           </NavLink>
 
           <NavLink to="/specialist/tickets">
-            📋 My Tickets
+            Обращения
           </NavLink>
 
           <NavLink to="/specialist/knowledge">
-            📚 Knowledge Base
+            База знаний
           </NavLink>
 
         </nav>
@@ -35,7 +35,7 @@ export default function SpecialistLayout() {
               window.location.href = "/";
             }}
           >
-            🚪 Logout
+            Выйти
           </button>
         </div>
 

@@ -86,9 +86,7 @@ export default function Tickets() {
   const statuses = [
     { value: "new", label: "New" },
     { value: "in_progress", label: "In progress" },
-    { value: "waiting_user", label: "Waiting user" },
-    { value: "done", label: "Done" },
-    { value: "rejected", label: "Rejected" }
+    { value: "done", label: "Done" }
   ];
 
   return (
@@ -101,14 +99,14 @@ export default function Tickets() {
           className={tab === "mine" ? "tab active" : "tab"}
           onClick={() => setTab("mine")}
         >
-          My tickets ({mineTickets.length})
+          Мои обращения ({mineTickets.length})
         </button>
 
         <button
           className={tab === "all" ? "tab active" : "tab"}
           onClick={() => setTab("all")}
         >
-          All tickets ({allTickets.length})
+         Все обращения({allTickets.length})
         </button>
 
       </div>
@@ -116,7 +114,7 @@ export default function Tickets() {
       {/* ================= SEARCH ================= */}
       <input
         className="input ticket-search"
-        placeholder="Search tickets..."
+        placeholder="Найти обращения..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
@@ -125,14 +123,14 @@ export default function Tickets() {
       <div className="filters-bar">
 
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="">All status</option>
+          <option value="">Все статусы</option>
           {statuses.map(s => (
             <option key={s.value} value={s.value}>{s.label}</option>
           ))}
         </select>
 
         <select value={category} onChange={(e) => setCategory(e.target.value)}>
-          <option value="">All categories</option>
+          <option value="">Все категории</option>
           {categories.map(cat => (
             <option key={cat} value={cat}>
               {cat === "manual_review" ? "Manual review" : cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -141,20 +139,12 @@ export default function Tickets() {
         </select>
 
         <select value={priority} onChange={(e) => setPriority(e.target.value)}>
-          <option value="">All priorities</option>
+          <option value="">Все приоритеты</option>
           {priorities.map(p => (
             <option key={p.value} value={p.value}>{p.label}</option>
           ))}
         </select>
 
-        <label className="checkbox">
-          <input
-            type="checkbox"
-            checked={lowConfidenceOnly}
-            onChange={(e) => setLowConfidenceOnly(e.target.checked)}
-          />
-          Low AI confidence
-        </label>
 
       </div>
 

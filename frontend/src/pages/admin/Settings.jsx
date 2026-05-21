@@ -125,7 +125,7 @@ export default function Settings() {
 
       {/* ROLES */}
       <div className="card glass block">
-        <h2>Roles</h2>
+        <h2>Роли</h2>
 
         <div className="list">
           {roles.map((r) => (
@@ -139,15 +139,15 @@ export default function Settings() {
         <input
           value={newRole}
           onChange={(e) => setNewRole(e.target.value)}
-          placeholder="New role"
+          placeholder="Новая роль"
         />
 
-        <button onClick={addRole}>Add Role</button>
+        <button onClick={addRole}>Добавить роль</button>
       </div>
 
       {/* CATEGORIES */}
       <div className="card glass block">
-        <h2>Categories</h2>
+        <h2>Категории</h2>
 
         <div className="list">
           {categories.map((c) => (
@@ -161,15 +161,15 @@ export default function Settings() {
         <input
           value={newCategory}
           onChange={(e) => setNewCategory(e.target.value)}
-          placeholder="New category"
+          placeholder="Новая категория"
         />
 
-        <button onClick={addCategory}>Add Category</button>
+        <button onClick={addCategory}>Добавить категорию</button>
       </div>
 
       {/* PRIORITIES */}
       <div className="card glass block">
-        <h2>Priorities</h2>
+        <h2>Приоритеты</h2>
 
         <div className="list">
           {priorities.map((p) => (
@@ -183,10 +183,10 @@ export default function Settings() {
         <input
           value={newPriority}
           onChange={(e) => setNewPriority(e.target.value)}
-          placeholder="New priority (1-5)"
+          placeholder="Новый приоритет"
         />
 
-        <button onClick={addPriority}>Add Priority</button>
+        <button onClick={addPriority}>Добавить приоритет</button>
       </div>
 
     </div>

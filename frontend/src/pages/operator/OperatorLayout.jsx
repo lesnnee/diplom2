@@ -8,22 +8,22 @@ export default function OperatorLayout() {
       <aside className="sidebar glass">
 
         <div className="logo">
-          ⚙️ Operator Panel
+          Панель оператора
         </div>
 
         <nav className="nav">
 
           <NavLink to="/operator" end>
-            🏠 Dashboard
+            Главная
           </NavLink>
 
           <NavLink to="/operator/tickets">
-            🎫 Tickets
+            Обращения
           </NavLink>
 
 
           <NavLink to="/operator/knowledge">
-            📚 Knowledge Base
+            База знаний
           </NavLink>
 
 
@@ -37,7 +37,7 @@ export default function OperatorLayout() {
               window.location.href = "/";
             }}
           >
-            🚪 Logout
+            Выйти
           </button>
         </div>
 

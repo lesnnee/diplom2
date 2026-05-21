@@ -24,7 +24,7 @@ export default function OperatorDashboard() {
     load();
   }, []);
 
-  if (!user) return <div className="page">Loading...</div>;
+  if (!user) return <div className="page">Загрузка...</div>;
 
   // =========================
   // 📊 ЛОГИКА НАГРУЗКИ (как у специалиста)
@@ -84,22 +84,22 @@ export default function OperatorDashboard() {
       <div className="stats-grid">
 
         <div className="glass card">
-          <h3>Assigned</h3>
+          <h3>Назначенные</h3>
           <p className="big">{assigned}</p>
         </div>
 
         <div className="glass card">
-          <h3>New</h3>
+          <h3>Новые</h3>
           <p className="big">{newTickets}</p>
         </div>
 
         <div className="glass card">
-          <h3>In Progress</h3>
+          <h3>В процессе</h3>
           <p className="big">{inProgress}</p>
         </div>
 
         <div className="glass card">
-          <h3>Resolved</h3>
+          <h3>Закрытые</h3>
           <p className="big">{done}</p>
         </div>
 
@@ -108,7 +108,7 @@ export default function OperatorDashboard() {
       {/* ================= WORKLOAD ================= */}
       <div className="glass card status-card">
 
-        <h3>Workload</h3>
+        <h3>Нагрузка на специалиста</h3>
 
         <div className="progress-bar">
           <div
@@ -118,9 +118,9 @@ export default function OperatorDashboard() {
         </div>
 
         <p>
-          {loadPercent < 40 && "Low load"}
-          {loadPercent >= 40 && loadPercent < 75 && "Medium load"}
-          {loadPercent >= 75 && "High load"}
+          {loadPercent < 40 && "Низкая нагрузка"}
+          {loadPercent >= 40 && loadPercent < 75 && "Средняя нагрузка"}
+          {loadPercent >= 75 && "Высокая нагрузка"}
         </p>
 
       </div>

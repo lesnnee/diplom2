@@ -112,14 +112,14 @@ export default function Users() {
           className={tab === "list" ? "tab active" : "tab"}
           onClick={() => setTab("list")}
         >
-          Users ({users.length})
+          Пользователи ({users.length})
         </button>
 
         <button
           className={tab === "create" ? "tab active" : "tab"}
           onClick={() => setTab("create")}
         >
-          Create User
+          Создать пользователя
         </button>
       </div>
 
@@ -132,7 +132,7 @@ export default function Users() {
           <div className="filters-row">
 
             <input
-              placeholder="Search users..."
+              placeholder="Найти пользователя..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -141,7 +141,7 @@ export default function Users() {
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
             >
-              <option value="all">All roles</option>
+              <option value="all">Все роли</option>
               {ROLES.map((r) => (
                 <option key={r} value={r}>
                   {r}
@@ -155,7 +155,7 @@ export default function Users() {
           <div className="users-list">
 
             {filteredUsers.length === 0 && (
-              <div className="empty">No users found</div>
+              <div className="empty">Пользователи не найдены</div>
             )}
 
             {filteredUsers.map((u) => (
@@ -186,7 +186,7 @@ export default function Users() {
                     className="danger delete-btn"
                     onClick={() => deleteUser(u._id)}
                   >
-                    Delete
+                    Удалить
                   </button>
 
                 </div>
@@ -204,10 +204,10 @@ export default function Users() {
       {tab === "create" && (
         <div className="glass card user-form">
 
-          <h2>Create User</h2>
+          <h2>Создать пользователя</h2>
 
           <input
-            placeholder="Name"
+            placeholder="Имя"
             value={form.name}
             onChange={(e) =>
               setForm({ ...form, name: e.target.value })
@@ -223,7 +223,7 @@ export default function Users() {
           />
 
           <input
-            placeholder="Password"
+            placeholder="Пароль"
             type="password"
             value={form.password}
             onChange={(e) =>
@@ -245,7 +245,7 @@ export default function Users() {
           </select>
 
           <button onClick={createUser}>
-             Create
+             Создать
           </button>
 
         </div>

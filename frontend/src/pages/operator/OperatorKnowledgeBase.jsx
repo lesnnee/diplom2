@@ -127,7 +127,7 @@ export default function OperatorKnowledgeBase() {
   return (
     <div className="kb-page">
 
-      <h1>Knowledge Base</h1>
+      <h1>База знаний</h1>
 
       {/* TABS */}
 
@@ -137,21 +137,21 @@ export default function OperatorKnowledgeBase() {
           className={tab === "tickets" ? "tab active" : "tab"}
           onClick={() => setTab("tickets")}
         >
-          Closed Tickets ({tickets.length})
+          Решенные обращения ({tickets.length})
         </button>
 
         <button
           className={tab === "articles" ? "tab active" : "tab"}
           onClick={() => setTab("articles")}
         >
-          Articles ({articles.length})
+          Статьи ({articles.length})
         </button>
 
         <button
           className={tab === "create" ? "tab active" : "tab"}
           onClick={() => setTab("create")}
         >
-          + Create Article
+          Создание статьи
         </button>
 
       </div>
@@ -167,7 +167,7 @@ export default function OperatorKnowledgeBase() {
 
             <input
               type="text"
-              placeholder="Search tickets..."
+              placeholder="Найти обращения..."
               className="input kb-search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -191,7 +191,7 @@ export default function OperatorKnowledgeBase() {
 
             {filteredTickets.length === 0 && (
               <div className="empty">
-                No tickets found
+                Обращения не найдены
               </div>
             )}
 
@@ -258,7 +258,7 @@ export default function OperatorKnowledgeBase() {
 
             <input
               type="text"
-              placeholder="Search articles..."
+              placeholder="Найти статью..."
               className="input kb-search"
               value={articleSearch}
               onChange={(e) => setArticleSearch(e.target.value)}
@@ -270,7 +270,7 @@ export default function OperatorKnowledgeBase() {
 
             {filteredArticles.length === 0 && (
               <div className="empty">
-                No articles yet
+                Статей пока нет
               </div>
             )}
 
@@ -342,7 +342,7 @@ export default function OperatorKnowledgeBase() {
 
           <input
             type="text"
-            placeholder="Article title..."
+            placeholder="Название статьи..."
             className="input"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -363,14 +363,14 @@ export default function OperatorKnowledgeBase() {
 
           <input
             type="text"
-            placeholder="Tags separated by comma..."
+            placeholder="Теги..."
             className="input"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
           />
 
           <textarea
-            placeholder="Write article..."
+            placeholder="Напишите статью..."
             className="input article-editor"
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -380,7 +380,7 @@ export default function OperatorKnowledgeBase() {
             className="liquid-btn"
             onClick={createArticle}
           >
-            Publish Article
+            Опубликовать статью
           </button>
 
         </div>

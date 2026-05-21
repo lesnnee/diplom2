@@ -215,6 +215,7 @@ def predict(data: TicketInput):
         return {
             "category": "unknown",
             "priority": 3,
+            "predicted_category": "unknown",
             "confidence_category": 0.0,
             "confidence_priority": 0.0,
             "error": "category_model_not_loaded"
@@ -233,10 +234,6 @@ def predict(data: TicketInput):
                 label: float(prob) for label, prob in zip(category_model.classes_, proba)
             }
         
-        THRESHOLD = 0.90
-        auto_approved = confidence_category >= THRESHOLD
-        final_category = category if auto_approved else "manual_review"
-        
         # Приоритет
         priority = 3
         confidence_priority = 0.0
@@ -252,13 +249,24 @@ def predict(data: TicketInput):
                     f"p{i}": float(prob) for i, prob in enumerate(proba, 1)
                 }
         
+        # Пороги
+        THRESHOLD_CATEGORY = 0.90
+        THRESHOLD_PRIORITY = 0.70
+        
+        # Авто-одобрение только если ОБА порога пройдены
+        auto_approved = (confidence_category >= THRESHOLD_CATEGORY) and (confidence_priority >= THRESHOLD_PRIORITY)
+        
+        final_category = category if auto_approved else "manual_review"
+        
         return {
             "category": final_category,
+            "predicted_category": category,
             "priority": priority,
             "confidence_category": confidence_category,
             "confidence_priority": confidence_priority,
             "auto_approved": auto_approved,
-            "threshold": THRESHOLD,
+            "threshold_category": THRESHOLD_CATEGORY,
+            "threshold_priority": THRESHOLD_PRIORITY,
             "category_probabilities": category_probabilities,
             "priority_probabilities": priority_probabilities
         }

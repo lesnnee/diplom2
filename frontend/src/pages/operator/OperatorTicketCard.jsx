@@ -21,17 +21,20 @@ export default function OperatorTicketCard({
   const mlPrediction = ticket.mlPrediction || {};
   const priorityPrediction = mlPrediction.priorityPrediction || {};
 
-  const confidence = mlPrediction.confidence || 0;
+  // ДАННЫЕ ДЛЯ ОТОБРАЖЕНИЯ РЕШЕНИЯ ИИ
   const predictedCategory = mlPrediction.predictedCategory || "unknown";
+  const confidenceCategory = (mlPrediction.confidence || 0) * 100;
   const predictedPriority = priorityPrediction.value || ticket.priority || 3;
-  const predictedAssignedTo = ticket.assignedTo?.name || "—";
+  const confidencePriority = (priorityPrediction.confidence || 0) * 100;
+  const autoApproved = mlPrediction.autoApproved || false;
 
   console.log("🔍 Ticket debug:", {
-  id: ticket._id,
-  assignedTo: ticket.assignedTo,
-  assignedToName: ticket.assignedTo?.name,
-  assignedToId: typeof ticket.assignedTo === 'object' ? ticket.assignedTo._id : ticket.assignedTo
-});
+    id: ticket._id,
+    assignedTo: ticket.assignedTo,
+    assignedToName: ticket.assignedTo?.name,
+    assignedToId: typeof ticket.assignedTo === 'object' ? ticket.assignedTo._id : ticket.assignedTo,
+    autoApproved
+  });
 
   // Загрузка всех специалистов (один раз при монтировании)
   useEffect(() => {
@@ -50,9 +53,9 @@ export default function OperatorTicketCard({
     loadSpecialists();
   }, []);
 
-  const getConfidenceColor = (c) => {
-    if (c >= 0.7) return "green";
-    if (c >= 0.4) return "yellow";
+  const getConfidenceColor = (conf) => {
+    if (conf >= 70) return "green";
+    if (conf >= 40) return "yellow";
     return "red";
   };
 
@@ -106,21 +109,6 @@ export default function OperatorTicketCard({
     { value: 5, label: "P5 - Info (вопрос/консультация)" }
   ];
 
-  // Группировка специалистов по ролям
-  const groupedSpecialists = specialists.reduce((acc, spec) => {
-    const roleMap = {
-      it_support: "💻 IT Support",
-      network_admin: "🌐 Network Admin",
-      sysadmin: "🏗️ Sysadmin",
-      security: "🔐 Security",
-      hardware_support: "🖥️ Hardware Support"
-    };
-    const roleName = roleMap[spec.role] || spec.role;
-    if (!acc[roleName]) acc[roleName] = [];
-    acc[roleName].push(spec);
-    return acc;
-  }, {});
-
   return (
     <div
       className={`op-ticket-card glass clickable ${isAssignedToMe ? "mine" : ""}`}
@@ -143,33 +131,56 @@ export default function OperatorTicketCard({
 
       {/* AI DECISION BLOCK */}
       <div className="op-ai-block">
-        <h4>🤖 ML Decision</h4>
+        <h4>Решение ИИ</h4>
 
         <div className="ai-row">
-          <span className="ai-label">Category:</span>
-          <span className="ai-value">{predictedCategory}</span>
+          <span className="ai-label">Категория:</span>
+          <span className="ai-value">
+            {predictedCategory}
+            {!autoApproved && predictedCategory !== "manual_review" && (
+              <span style={{ color: "#e67e22", fontSize: "0.85em", marginLeft: "8px" }}>
+                (needs review)
+              </span>
+            )}
+          </span>
         </div>
 
         <div className="ai-row">
-          <span className="ai-label">Priority:</span>
+          <span className="ai-label">Процент уверенности:</span>
+          <span style={{ fontWeight: "bold", color: getConfidenceColor(confidenceCategory) }}>
+            {confidenceCategory.toFixed(1)}%
+          </span>
+        </div>
+
+        <div className="ai-row">
+          <span className="ai-label">Приоритет:</span>
           <span className="ai-value">P{predictedPriority}</span>
         </div>
 
         <div className="ai-row">
-          <span className="ai-label">Assigned to:</span>
-          <span className="ai-value">{predictedAssignedTo}</span>
+          <span className="ai-label">Процент уверенности:</span>
+          <span style={{ fontWeight: "bold", color: getConfidenceColor(confidencePriority) }}>
+            {confidencePriority.toFixed(1)}%
+          </span>
         </div>
 
-        <div className={`confidence ${getConfidenceColor(confidence)}`}>
-          Confidence: {(confidence * 100).toFixed(1)}%
+        <div className="ai-row">
+          <span className="ai-label">Назначен:</span>
+          <span className="ai-value">{ticket.assignedTo?.name || "—"}</span>
         </div>
+
+        {!autoApproved && predictedCategory !== "manual_review" && (
+          <div style={{ marginTop: "12px", padding: "8px", background: "#fff3e0", borderLeft: "4px solid #e67e22", fontSize: "0.85em" }}>
+            ⚠️ Low model confidence — manual review required
+          </div>
+        )}
       </div>
 
       {/* OVERRIDE BLOCK */}
       <div className="op-override" onClick={(e) => e.stopPropagation()}>
 
         <div className="override-row">
-          <label>📂 Category override:</label>
+          <label>Изменить категорию:</label>
           <select value={category} onChange={(e) => setCategory(e.target.value)}>
             {categories.map(cat => (
               <option key={cat} value={cat}>
@@ -180,7 +191,7 @@ export default function OperatorTicketCard({
         </div>
 
         <div className="override-row">
-          <label>⚡ Priority override:</label>
+          <label>Изменить приоритет:</label>
           <select value={priority} onChange={(e) => setPriority(parseInt(e.target.value))}>
             {priorities.map(p => (
               <option key={p.value} value={p.value}>{p.label}</option>
@@ -190,28 +201,24 @@ export default function OperatorTicketCard({
 
         {/* ВЫБОР СПЕЦИАЛИСТА */}
         <div className="override-row">
-          <label>👨‍💼 Assign to specialist:</label>
+          <label>Назначить специалиста:</label>
           <select 
             value={assignedTo} 
             onChange={(e) => setAssignedTo(e.target.value)}
             disabled={loadingSpecialists}
           >
-            <option value="">— Auto-assign (ML will choose best) —</option>
-            {Object.entries(groupedSpecialists).map(([roleName, specs]) => (
-              <optgroup key={roleName} label={roleName}>
-                {specs.map(spec => (
-                  <option key={spec._id} value={spec._id}>
-                    {spec.name} ({spec.activeTickets || 0} active tickets)
-                  </option>
-                ))}
-              </optgroup>
+            <option value="">Main Operator</option>
+            {specialists.map(spec => (
+              <option key={spec._id} value={spec._id}>
+                {spec.name} ({spec.role}) — {spec.activeTickets || 0} активных тикетов
+              </option>
             ))}
           </select>
-          {loadingSpecialists && <span className="loading">Loading specialists...</span>}
+          {loadingSpecialists && <span className="loading">Загрузка...</span>}
         </div>
 
         <button className="save-btn" onClick={updateTicket}>
-          💾 Save corrections
+          Сохранить изменения
         </button>
 
       </div>
@@ -219,7 +226,7 @@ export default function OperatorTicketCard({
       {/* ACTIONS */}
       <div className="op-actions" onClick={(e) => e.stopPropagation()}>
         <button className="close-btn" onClick={closeTicket}>
-          ✅ Close ticket
+          Закрыть обращение
         </button>
       </div>
 

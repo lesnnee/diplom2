@@ -70,7 +70,7 @@ export default function KnowledgeBase() {
   return (
     <div className="kb-page">
 
-      <h1>Knowledge Base</h1>
+      <h1>База знаний</h1>
 
       {/* TABS */}
       <div className="tabs">
@@ -79,14 +79,14 @@ export default function KnowledgeBase() {
           className={tab === "tickets" ? "tab active" : "tab"}
           onClick={() => setTab("tickets")}
         >
-          Closed Tickets ({tickets.length})
+          Решенные обращения ({tickets.length})
         </button>
 
         <button
           className={tab === "articles" ? "tab active" : "tab"}
           onClick={() => setTab("articles")}
         >
-          Articles ({articles.length})
+          Статьи ({articles.length})
         </button>
 
       </div>
@@ -101,7 +101,7 @@ export default function KnowledgeBase() {
           {/* SEARCH */}
           <input
             className="input kb-search"
-            placeholder="Search tickets..."
+            placeholder="Найти обращения..."
             value={ticketSearch}
             onChange={(e) => setTicketSearch(e.target.value)}
           />
@@ -109,7 +109,7 @@ export default function KnowledgeBase() {
           <div className="ticket-list grid">
 
             {filteredTickets.length === 0 && (
-              <div className="empty">No knowledge yet</div>
+              <div className="empty">Пока ничего нет</div>
             )}
 
             {filteredTickets.map((t) => (
@@ -155,7 +155,7 @@ export default function KnowledgeBase() {
           {/* SEARCH */}
           <input
             className="input kb-search"
-            placeholder="Search articles..."
+            placeholder="Найти статьи..."
             value={articleSearch}
             onChange={(e) => setArticleSearch(e.target.value)}
           />

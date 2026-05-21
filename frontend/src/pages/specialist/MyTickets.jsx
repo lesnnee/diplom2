@@ -89,12 +89,12 @@ export default function MyTickets() {
   return (
     <div className="tickets-page">
 
-      <h1>My Tickets</h1>
+      <h1>Обращения</h1>
 
       {/* SEARCH */}
       <input
         className="ticket-search"
-        placeholder="Search tickets..."
+        placeholder="Найти обращения..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
@@ -107,12 +107,12 @@ export default function MyTickets() {
           value={priorityFilter}
           onChange={(e) => setPriorityFilter(e.target.value)}
         >
-          <option value="all">All priorities</option>
-          <option value="1">P1 (Critical)</option>
-          <option value="2">P2 (High)</option>
-          <option value="3">P3 (Medium)</option>
-          <option value="4">P4 (Low)</option>
-          <option value="5">P5 (Very Low)</option>
+          <option value="all">Все приоритеты</option>
+          <option value="1">P1</option>
+          <option value="2">P2</option>
+          <option value="3">P3</option>
+          <option value="4">P4</option>
+          <option value="5">P5</option>
         </select>
 
         {/* PRIORITY SORT */}
@@ -120,8 +120,8 @@ export default function MyTickets() {
           value={prioritySort}
           onChange={(e) => setPrioritySort(e.target.value)}
         >
-          <option value="high">High → Low (P1 first)</option>
-          <option value="low">Low → High (P5 first)</option>
+          <option value="high">Сначала высокий приоритет</option>
+          <option value="low">Сначала низкий приоритет</option>
         </select>
 
         {/* DATE SORT */}
@@ -129,31 +129,36 @@ export default function MyTickets() {
           value={dateSort}
           onChange={(e) => setDateSort(e.target.value)}
         >
-          <option value="newest">Newest first</option>
-          <option value="oldest">Oldest first</option>
+          <option value="newest">Сначала новые</option>
+          <option value="oldest">Сначала старые</option>
         </select>
 
       </div>
 
       {/* TABS */}
       <div className="tabs">
-        {["all", "new", "in_progress", "done"].map((t) => (
-          <button
-            key={t}
-            className={tab === t ? "tab active" : "tab"}
-            onClick={() => setTab(t)}
-          >
-            {t} ({counts[t]})
-          </button>
-        ))}
-      </div>
+  {[
+    { key: "all", label: "Все" },
+    { key: "new", label: "Новые" },
+    { key: "in_progress", label: "В работе" },
+    { key: "done", label: "Выполнено" }
+  ].map((t) => (
+    <button
+      key={t.key}
+      className={tab === t.key ? "tab active" : "tab"}
+      onClick={() => setTab(t.key)}
+    >
+      {t.label} ({counts[t.key]})
+    </button>
+  ))}
+</div>
 
       {/* LIST */}
       <div className="ticket-list">
 
         {filteredTickets.length === 0 && (
           <div className="empty">
-            No tickets found
+            Обращений нет
           </div>
         )}
 

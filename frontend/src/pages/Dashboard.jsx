@@ -146,20 +146,20 @@ const filteredTickets = tickets
         <p className="email">{user?.email}</p>
 
         <span className="logout-text" onClick={logout}>
-          logout
+          Выйти
         </span>
       </div>
 
       {/* CREATE */}
       <div className="panel liquid center">
-        <h2 className="title">CREATE TICKET</h2>
+        <h2 className="title">СОЗДАТЬ ОБРАЩЕНИЕ</h2>
 
         <form onSubmit={createTicket} className="form glass-form">
 
           <textarea
             name="description"
             className="input no-resize"
-            placeholder="Describe your problem..."
+            placeholder="Опишите вашу проблему..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
@@ -204,7 +204,7 @@ const filteredTickets = tickets
             </label>
 
             <button className="button liquid-btn">
-              SEND
+              ОТПРАВИТЬ
             </button>
 
           </div>
@@ -214,11 +214,11 @@ const filteredTickets = tickets
       {/* TICKETS */}
       <div className="panel glass soft-right">
 
-        <h2 className="title">TICKETS</h2>
+        <h2 className="title">ОБРАЩЕНИЯ</h2>
 
         <input
           className="input search"
-          placeholder="Search tickets..."
+          placeholder="Найти обращение..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -228,14 +228,14 @@ const filteredTickets = tickets
             className={activeTab === "active" ? "tab active" : "tab"}
             onClick={() => setActiveTab("active")}
           >
-            Active
+            Активные
           </button>
 
           <button
             className={activeTab === "done" ? "tab active" : "tab"}
             onClick={() => setActiveTab("done")}
           >
-            Done
+            Закрытые
           </button>
         </div>
 
@@ -247,8 +247,8 @@ const filteredTickets = tickets
     value={sortOrder}
     onChange={(e) => setSortOrder(e.target.value)}
   >
-    <option value="new">Newest first</option>
-    <option value="old">Oldest first</option>
+    <option value="new">Сначала новые</option>
+    <option value="old">Сначала старые</option>
   </select>
 
   {/* STATUS */}
@@ -257,12 +257,9 @@ const filteredTickets = tickets
     value={statusFilter}
     onChange={(e) => setStatusFilter(e.target.value)}
   >
-    <option value="all">All statuses</option>
-    <option value="new">New</option>
-    <option value="in_progress">In progress</option>
-    <option value="waiting_user">Waiting user</option>
-    <option value="done">Done</option>
-    <option value="rejected">Rejected</option>
+    <option value="all">Все статусы</option>
+    <option value="new">Новые</option>
+    <option value="in_progress">В процессе</option>
   </select>
 
 </div>

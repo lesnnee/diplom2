@@ -31,12 +31,12 @@ const formatTime = (min) => {
   const h = Math.floor((min % 1440) / 60);
   const m = min % 60;
 
-  if (d === 0 && h === 0) return `${m}m`;
-  if (d === 0) return `${h}h ${m}m`;
-  return `${d}d ${h}h`;
+  if (d === 0 && h === 0) return `${m}м`;
+  if (d === 0) return `${h}ч ${m}м`;
+  return `${d}д ${h}ч`;
 };
 
-  if (!stats || !user) return <div className="page">Loading...</div>;
+  if (!stats || !user) return <div className="page">Загрузка...</div>;
 
   return (
     <div className="op-dashboard">
@@ -58,18 +58,18 @@ const formatTime = (min) => {
       <div className="stats-grid">
 
         <div className="glass card">
-          <h3>Users</h3>
+          <h3>Пользователи</h3>
           <p className="big">{stats.users}</p>
         </div>
 
         <div className="glass card">
-          <h3>Tickets</h3>
+          <h3>Обращения</h3>
           <p className="big">{stats.tickets}</p>
         </div>
 
 
         <div className="glass card">
-          <h3>Active Operators</h3>
+          <h3>Действующие операторы</h3>
           <p className="big">{stats.operators}</p>
         </div>
 
@@ -78,21 +78,21 @@ const formatTime = (min) => {
             <div className="stats-grid">
 
         <div className="glass card">
-          <h3>Avg Resolution</h3>
+          <h3>Среднее время решения</h3>
           <p className="big">
              {formatTime(stats.avgResolutionTime)}
           </p>
         </div>
 
         <div className="glass card">
-          <h3>Success Rate</h3>
+          <h3>Процент решенных обращений</h3>
           <p className="big">
             {stats.successRate}%
           </p>
         </div>
 
         <div className="glass card">
-          <h3>Overloaded</h3>
+          <h3>Перегруженные специалисты</h3>
           <p className="big">
             {stats.overloadedUsers}
           </p>
